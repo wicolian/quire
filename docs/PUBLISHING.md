@@ -18,15 +18,12 @@ Publish from the **koushiktwitter** account.
    publishes owns the plugin permanently, and moving it later means transferring or
    republishing from scratch.
 
-2. **Remove the development plugin id.** `manifest.json` currently carries a
-   placeholder:
+2. **Plugin id: already handled.** `manifest.json` deliberately has no `id` field.
+   Figma writes a real one into the manifest the first time you publish, and local
+   development works without it.
 
-   ```json
-   "id": "quire-pdf-export-local-dev"
-   ```
-
-   Figma assigns a real id on first publish. Delete that line before publishing, or let
-   Figma overwrite it. Do not ship the placeholder.
+   If you ever see an `id` reappear that you did not publish under, it is a stale
+   value and should be removed before submitting.
 
 3. **Build fresh.** `npm run build`. The `dist/` directory is gitignored, so a clean
    clone must build before importing.
