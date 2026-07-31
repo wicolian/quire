@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 960" width="1920" height="960" role="img" aria-label="Quire — sections to PDF">
+  <title>Quire — sections to PDF</title>
+  <!--
+    Figma Community cover art, 1920x960.
+
+    Composed as a press sheet: the wordmark and claim on the left, an actual depiction
+    of the spine severing at a break marker on the right. The right side is the product
+    demo — it shows the one idea the plugin is built around rather than a screenshot
+    that will be illegible at card size.
+  -->
+  <defs>
+    <style>
+      .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+      .sans { font-family: Inter, -apple-system, "Helvetica Neue", Arial, sans-serif; }
+    </style>
+  </defs>
+
+  <rect width="1920" height="960" fill="#191713" />
+
+  <!-- Faint press-registration grid, the way a proof sheet is gridded. -->
+  <g stroke="#F2EDE4" stroke-opacity="0.045" stroke-width="1">
+    <path d="M0 240h1920M0 480h1920M0 720h1920" />
+    <path d="M480 0v960M960 0v960M1440 0v960" />
+  </g>
+
+  <!-- ── left: identity ────────────────────────────────────────────────── -->
+  <g transform="translate(150, 300)">
+    <g stroke-linecap="round" fill="none" transform="translate(0, 8)">
+      <path d="M8 0v108" stroke="#E5645A" stroke-width="13" />
+      <path d="M35 12v84" stroke="#F2EDE4" stroke-width="8" opacity="0.72" />
+      <path d="M60 3v102" stroke="#F2EDE4" stroke-width="8" opacity="0.5" />
+      <path d="M85 15v78" stroke="#F2EDE4" stroke-width="8" opacity="0.3" />
+    </g>
+
+    <text class="sans" x="140" y="88" font-size="104" font-weight="600" letter-spacing="-3" fill="#F2EDE4">Quire</text>
+
+    <text class="sans" x="2" y="210" font-size="38" font-weight="400" fill="#B5AC9E">Sections to PDF.</text>
+    <text class="sans" x="2" y="262" font-size="38" font-weight="400" fill="#B5AC9E">Ordered, merged, compressed.</text>
+
+    <g class="mono" font-size="23" fill="#857C6E">
+      <text x="2" y="356">Drag to reorder · A–Z · split anywhere</text>
+      <text x="2" y="398">Real image compression, not just merging</text>
+      <text x="2" y="440">Set a size limit and actually hit it</text>
+    </g>
+
+    <g transform="translate(2, 490)">
+      <rect width="290" height="46" rx="7" fill="none" stroke="#F2EDE4" stroke-opacity="0.22" />
+      <text class="mono" x="20" y="30" font-size="20" fill="#857C6E">100% local · nothing uploaded</text>
+    </g>
+  </g>
+
+  <!-- ── right: the spine, breaking ─────────────────────────────────────── -->
+  <g transform="translate(1180, 196)">
+    <rect x="-44" y="-44" width="620" height="656" rx="16" fill="#201D19" stroke="#F2EDE4" stroke-opacity="0.09" />
+
+    <!-- group one -->
+    <g>
+      <path d="M0 8v96" stroke="#E5645A" stroke-width="4" stroke-linecap="round" />
+      <g class="mono" font-size="21" fill="#F2EDE4">
+        <text x="30" y="26">01  D2-01 Cover</text>
+        <text x="30" y="82">02  D2-02 Introduction</text>
+      </g>
+    </g>
+
+    <!-- the break: the spine is genuinely severed -->
+    <g transform="translate(0, 128)">
+      <text x="-9" y="6" font-size="20" fill="#C39A6B">✂</text>
+      <path d="M28 0h406" stroke="#F2EDE4" stroke-opacity="0.28" stroke-width="1.5" stroke-dasharray="5 6" />
+      <text class="mono" x="450" y="6" font-size="15" fill="#5A5348" letter-spacing="1.5">NEW FILE</text>
+    </g>
+
+    <!-- group two -->
+    <g transform="translate(0, 158)">
+      <path d="M0 8v160" stroke="#E5645A" stroke-width="4" stroke-linecap="round" />
+      <g class="mono" font-size="21" fill="#F2EDE4">
+        <text x="30" y="26">03  D2-03 Comparison table</text>
+        <text x="30" y="82">04  D2-04 Factor 1</text>
+        <text x="30" y="138">05  D2-05 Factor 2</text>
+      </g>
+    </g>
+
+    <!-- group three -->
+    <g transform="translate(0, 350)">
+      <text x="-9" y="6" font-size="20" fill="#C39A6B">✂</text>
+      <path d="M28 0h406" stroke="#F2EDE4" stroke-opacity="0.28" stroke-width="1.5" stroke-dasharray="5 6" />
+      <text class="mono" x="450" y="6" font-size="15" fill="#5A5348" letter-spacing="1.5">NEW FILE</text>
+      <path d="M0 30v96" stroke="#E5645A" stroke-width="4" stroke-linecap="round" />
+      <g class="mono" font-size="21" fill="#F2EDE4">
+        <text x="30" y="48">06  D2-06 Reference</text>
+        <text x="30" y="104" fill="#5A5348" text-decoration="line-through">07  D2-07 Scratch</text>
+      </g>
+    </g>
+
+    <!-- ink gauge -->
+    <g transform="translate(0, 520)">
+      <text class="mono" x="0" y="0" font-size="15" fill="#5A5348" letter-spacing="2">STOCK · EMAIL</text>
+      <rect x="0" y="18" width="530" height="7" rx="3.5" fill="#F2EDE4" fill-opacity="0.09" />
+      <rect x="0" y="18" width="223" height="7" rx="3.5" fill="#B5AC9E" />
+      <text class="mono" x="530" y="52" font-size="19" fill="#857C6E" text-anchor="end">4.2 MB / 10 MB</text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Quire">
+  <title>Quire</title>
+  <!--
+    Plugin icon. Rendered at 32px or smaller in Figma's plugin list, so the mark is
+    heavier and more separated than the bare wordmark version: at that size, thin
+    strokes and tight gaps turn to mush.
+
+    Uncoated stock ground, press-black leaves, registration-red spine — the one place
+    the accent colour appears, because the spine is the thing this plugin is about.
+  -->
+  <rect width="128" height="128" rx="28" fill="#F6F3ED" />
+  <rect x="0.75" y="0.75" width="126.5" height="126.5" rx="27.25" fill="none" stroke="#1F1B16" stroke-opacity="0.12" stroke-width="1.5" />
+  <g stroke-linecap="round" fill="none">
+    <path d="M34 26v76" stroke="#C8322A" stroke-width="10" />
+    <path d="M55 34v60" stroke="#1F1B16" stroke-width="6" opacity="0.72" />
+    <path d="M74 28v72" stroke="#1F1B16" stroke-width="6" opacity="0.52" />
+    <path d="M93 37v54" stroke="#1F1B16" stroke-width="6" opacity="0.32" />
+  </g>
+</svg>

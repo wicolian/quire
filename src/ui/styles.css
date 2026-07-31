@@ -1,0 +1,744 @@
+/*
+ * Quire's surface.
+ *
+ * The palette comes from a print shop rather than a design system: uncoated paper
+ * stock, warm press black that is never #000, registration-mark red for the one
+ * moment that matters, blueline blue for informational marks.
+ *
+ * Depth is borders-only. This panel floats over the user's artwork, and shadows would
+ * compete with the thing they are actually looking at.
+ */
+
+:root {
+  --stock: #f6f3ed;
+  --stock-raised: #fbf9f5;
+  --stock-inset: #efebe3;
+
+  --ink: #1f1b16;
+  --ink-2: #554e45;
+  --ink-3: #857c70;
+  --ink-4: #b3aa9c;
+
+  --rule: rgba(31, 27, 22, 0.11);
+  --rule-soft: rgba(31, 27, 22, 0.06);
+  --rule-strong: rgba(31, 27, 22, 0.24);
+
+  --reg: #c8322a;
+  --reg-ink: #ffffff;
+  --blueline: #4a6fa5;
+  --kraft: #a8794a;
+
+  --radius: 3px;
+  --radius-lg: 5px;
+  --row: 30px;
+  --unit: 4px;
+
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono", "Roboto Mono", Menlo,
+    Consolas, monospace;
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+:root.figma-dark {
+  --stock: #191713;
+  --stock-raised: #201d19;
+  --stock-inset: #131110;
+
+  --ink: #f2ede4;
+  --ink-2: #b5ac9e;
+  --ink-3: #857c6e;
+  --ink-4: #5a5348;
+
+  --rule: rgba(242, 237, 228, 0.13);
+  --rule-soft: rgba(242, 237, 228, 0.07);
+  --rule-strong: rgba(242, 237, 228, 0.28);
+
+  --reg: #e5645a;
+  --reg-ink: #1a0f0e;
+  --blueline: #7d9fd1;
+  --kraft: #c39a6b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--stock);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* Every number in this interface is data on a proof sheet. Tabular figures keep
+   columns of page numbers and byte counts from shifting as they change. */
+.mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+
+:focus-visible {
+  outline: 1.5px solid var(--reg);
+  outline-offset: 1px;
+  border-radius: var(--radius);
+}
+
+/* ── shell ─────────────────────────────────────────────────────────────────── */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.masthead {
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--rule);
+  flex: none;
+}
+
+.masthead-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.doc-name {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.doc-meta {
+  margin-top: 2px;
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.01em;
+}
+
+.icon-button {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius);
+  color: var(--ink-3);
+}
+
+.icon-button:hover {
+  background: var(--stock-inset);
+  color: var(--ink);
+}
+
+/* ── order bar ─────────────────────────────────────────────────────────────── */
+
+.orderbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--rule);
+  flex: none;
+}
+
+.chip {
+  padding: 3px 7px;
+  border-radius: var(--radius);
+  font-size: 10px;
+  color: var(--ink-2);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.chip:hover {
+  background: var(--stock-inset);
+  color: var(--ink);
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--stock-inset);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--rule);
+}
+
+.orderbar-spacer {
+  flex: 1;
+}
+
+/* ── the spine ─────────────────────────────────────────────────────────────────
+   The signature element. A hairline binds the page list down its left edge; a break
+   marker physically severs it, so combined-versus-split is visible at a glance rather
+   than read off a radio button. During export it fills with ink, top down. */
+
+.sheet {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 0 8px;
+  position: relative;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 22px 26px 1fr auto;
+  align-items: center;
+  height: var(--row);
+  padding-right: 8px;
+  position: relative;
+  user-select: none;
+}
+
+.row:hover {
+  background: var(--stock-raised);
+}
+
+.spine {
+  position: relative;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  cursor: grab;
+  color: var(--ink-4);
+}
+
+/* The binding itself. */
+.spine::before {
+  content: "";
+  position: absolute;
+  left: 11px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--rule-strong);
+}
+
+.row:first-child .spine::before {
+  top: 6px;
+}
+
+.row.last-in-group .spine::before {
+  bottom: 6px;
+}
+
+.row.pressed .spine::before {
+  background: var(--reg);
+}
+
+.spine-grip {
+  opacity: 0;
+  font-size: 9px;
+  line-height: 1;
+  position: relative;
+  background: var(--stock);
+  padding: 2px 0;
+}
+
+.row:hover .spine-grip {
+  opacity: 1;
+}
+
+.row.dragging {
+  opacity: 0.5;
+}
+
+.row.excluded .page-name {
+  text-decoration: line-through;
+  color: var(--ink-4);
+}
+
+.page-num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  color: var(--ink-4);
+  text-align: right;
+  padding-right: 8px;
+}
+
+.row.excluded .page-num {
+  color: var(--ink-4);
+  opacity: 0.5;
+}
+
+.page-name {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  opacity: 0;
+}
+
+.row:hover .row-actions,
+.row:focus-within .row-actions {
+  opacity: 1;
+}
+
+.row-action {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius);
+  color: var(--ink-3);
+  font-size: 11px;
+}
+
+.row-action:hover {
+  background: var(--stock-inset);
+  color: var(--ink);
+}
+
+.badge {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: var(--blueline);
+  padding-right: 4px;
+  white-space: nowrap;
+}
+
+/* Where the spine breaks. */
+.break {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  height: 18px;
+  color: var(--ink-4);
+  padding-right: 8px;
+}
+
+.break-mark {
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  color: var(--kraft);
+}
+
+.break-rule {
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    var(--rule-strong) 0 3px,
+    transparent 3px 6px
+  );
+}
+
+.break-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: var(--ink-4);
+  padding-left: 6px;
+}
+
+/* Rendered in flow so it lands exactly between two rows regardless of any break
+   markers above it — no offset arithmetic to drift out of sync with the layout. */
+.insertion {
+  position: relative;
+  height: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.insertion::before {
+  content: "";
+  position: absolute;
+  left: 22px;
+  right: 8px;
+  top: -1px;
+  height: 1.5px;
+  background: var(--reg);
+}
+
+/* ── controls ──────────────────────────────────────────────────────────────── */
+
+.controls {
+  flex: none;
+  border-top: 1px solid var(--rule);
+  padding: 9px 12px 10px;
+}
+
+.label {
+  font-size: 9px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 5px;
+}
+
+.stocks {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--stock-inset);
+}
+
+.stock {
+  padding: 5px 2px;
+  font-size: 10px;
+  text-align: center;
+  color: var(--ink-2);
+  border-right: 1px solid var(--rule);
+}
+
+.stock:last-child {
+  border-right: none;
+}
+
+.stock:hover {
+  color: var(--ink);
+}
+
+.stock[aria-pressed="true"] {
+  background: var(--stock-raised);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* The ink gauge: coverage against the cap, filling like ink on a sheet. */
+.gauge {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gauge-track {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--stock-inset);
+  box-shadow: inset 0 0 0 1px var(--rule-soft);
+  overflow: hidden;
+}
+
+.gauge-fill {
+  height: 100%;
+  background: var(--ink-2);
+  transition: width 220ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.gauge-fill.over {
+  background: var(--reg);
+}
+
+.gauge-figure {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.gauge-figure.over {
+  color: var(--reg);
+}
+
+.disclosure {
+  margin-top: 8px;
+  font-size: 10px;
+  color: var(--ink-3);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.disclosure:hover {
+  color: var(--ink);
+}
+
+.advanced {
+  margin-top: 8px;
+  display: grid;
+  gap: 7px;
+}
+
+.field {
+  display: grid;
+  grid-template-columns: 74px 1fr 40px;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: var(--ink-2);
+}
+
+.field input[type="range"] {
+  width: 100%;
+  accent-color: var(--reg);
+  height: 3px;
+}
+
+.field-value {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  color: var(--ink-3);
+  text-align: right;
+}
+
+.text-input {
+  background: var(--stock-inset);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 3px 6px;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  width: 100%;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: var(--rule-strong);
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.checkbox input {
+  accent-color: var(--reg);
+  margin: 0;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 9px;
+}
+
+/* ── the outcome button ────────────────────────────────────────────────────────
+   States the result, not the verb. You never press this wondering what you get. */
+
+.footer {
+  flex: none;
+  border-top: 1px solid var(--rule);
+  padding: 9px 12px 11px;
+}
+
+.export {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-lg);
+  background: var(--reg);
+  color: var(--reg-ink);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: filter 120ms ease;
+}
+
+.export:hover:not(:disabled) {
+  filter: brightness(1.07);
+}
+
+.export:active:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.export.secondary {
+  background: transparent;
+  color: var(--ink-2);
+  box-shadow: inset 0 0 0 1px var(--rule-strong);
+}
+
+.export.secondary:hover:not(:disabled) {
+  color: var(--ink);
+  background: var(--stock-inset);
+}
+
+.export-figure {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.82;
+  font-weight: 400;
+}
+
+/* ── states ────────────────────────────────────────────────────────────────── */
+
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+}
+
+.empty-mark {
+  color: var(--ink-4);
+  line-height: 0;
+}
+
+.empty-title {
+  font-size: 11px;
+  color: var(--ink-2);
+  max-width: 240px;
+}
+
+.empty-hint {
+  font-size: 10px;
+  color: var(--ink-4);
+  max-width: 240px;
+}
+
+.link {
+  color: var(--blueline);
+  font-size: 10px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link:hover {
+  color: var(--ink);
+}
+
+.notice {
+  margin: 8px 12px 0;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  border: 1px solid var(--rule);
+  background: var(--stock-raised);
+  font-size: 10px;
+  color: var(--ink-2);
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.notice.warn {
+  border-color: color-mix(in srgb, var(--reg) 40%, var(--rule));
+}
+
+.notice-mark {
+  color: var(--kraft);
+  flex: none;
+  line-height: 1.5;
+}
+
+.notice.warn .notice-mark {
+  color: var(--reg);
+}
+
+.notice-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.progress-line {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  text-align: center;
+  padding: 3px 0 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── scan results ──────────────────────────────────────────────────────────── */
+
+.scan-group {
+  padding: 8px 12px 2px;
+  font-size: 9px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+.scan-row {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 12px;
+  font-size: 11px;
+}
+
+.scan-row:hover {
+  background: var(--stock-raised);
+}
+
+.scan-name {
+  font-family: var(--mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scan-count {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  color: var(--ink-4);
+}
+
+.sheet::-webkit-scrollbar {
+  width: 9px;
+}
+
+.sheet::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border-radius: 5px;
+  border: 3px solid var(--stock);
+}
+
+.sheet::-webkit-scrollbar-thumb:hover {
+  background: var(--rule-strong);
+}

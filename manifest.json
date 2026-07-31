@@ -1,0 +1,15 @@
+{
+  "name": "Quire",
+  "id": "quire-pdf-export-local-dev",
+  "api": "1.0.0",
+  "main": "dist/main.js",
+  "ui": "dist/ui.html",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["none"],
+    "reasoning": "Quire assembles and compresses PDFs entirely inside the plugin. Nothing leaves your machine."
+  },
+  "permissions": [],
+  "capabilities": []
+}

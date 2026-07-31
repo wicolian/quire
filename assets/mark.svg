@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Quire">
+  <title>Quire</title>
+  <!--
+    Gathered sheets bound at the spine.
+
+    The heavy left stroke is the binding; the four lighter strokes are leaves, cut to
+    uneven heights so the stack reads as paper rather than as a bar chart. Same mark
+    as the panel's empty state and the fill that runs down the page list during export.
+  -->
+  <g stroke="currentColor" stroke-linecap="round" fill="none">
+    <path d="M12 10v44" stroke-width="5" />
+    <path d="M22 14v36" stroke-width="3" opacity="0.55" />
+    <path d="M31 11v42" stroke-width="3" opacity="0.45" />
+    <path d="M40 16v32" stroke-width="3" opacity="0.35" />
+    <path d="M49 13v38" stroke-width="3" opacity="0.25" />
+  </g>
+</svg>
