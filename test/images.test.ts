@@ -1,3 +1,4 @@
+import { unzlibSync } from 'fflate'
 import { PDFDocument, PDFName, PDFRawStream, PDFRef } from 'pdf-lib'
 import { describe, expect, it } from 'vitest'
 import { nodeCodec } from '../src/core/adapters/codec.node'
@@ -120,6 +121,67 @@ describe('recompressImages', () => {
     expect((mask.dict.get(PDFName.of('ColorSpace')) as PDFName).asString()).toBe('/DeviceGray')
     expect(dictNumber(mask, 'Width')).toBe(dictNumber(parent!.stream, 'Width'))
     expect(dictNumber(mask, 'Height')).toBe(dictNumber(parent!.stream, 'Height'))
+  })
+
+  it('preserves the gradient in a soft mask instead of flattening it opaque', async () => {
+    // The defect this covers: a DeviceGray soft mask decodes with its gray value in
+    // R, G and B and alpha hardcoded to 255. Reading the alpha channel back out
+    // returns a uniformly opaque mask, so every drop shadow renders as a hard block
+    // and the constant buffer deflates to almost nothing.
+    const { doc } = await mergePdfs([
+      await imagePage({
+        imageWidth: 1600,
+        imageHeight: 1600,
+        drawWidth: 200,
+        drawHeight: 200,
+        encoding: 'flate',
+        withSoftMask: true,
+      }),
+    ])
+
+    await recompressImages(doc, baseOptions)
+
+    const parent = images(doc).find((entry) => entry.stream.dict.get(PDFName.of('SMask')))
+    expect(parent).toBeDefined()
+
+    const maskRef = parent!.stream.dict.get(PDFName.of('SMask')) as PDFRef
+    const mask = doc.context.lookup(maskRef) as PDFRawStream
+    const samples = unzlibSync(mask.contents)
+
+    let min = 255
+    let max = 0
+    for (const value of samples) {
+      if (value < min) min = value
+      if (value > max) max = value
+    }
+
+    // The fixture mask is a horizontal ramp from 0 to 255. Downsampling should keep a
+    // wide range; a collapsed mask has min === max.
+    expect(max - min).toBeGreaterThan(200)
+    expect(min).toBeLessThan(40)
+    expect(max).toBeGreaterThan(215)
+  })
+
+  it('leaves a soft mask alone rather than replacing it with a constant', async () => {
+    const { doc } = await mergePdfs([
+      await imagePage({
+        imageWidth: 900,
+        imageHeight: 900,
+        drawWidth: 150,
+        drawHeight: 150,
+        encoding: 'flate',
+        withSoftMask: true,
+      }),
+    ])
+
+    await recompressImages(doc, baseOptions)
+
+    const parent = images(doc).find((entry) => entry.stream.dict.get(PDFName.of('SMask')))
+    const maskRef = parent!.stream.dict.get(PDFName.of('SMask')) as PDFRef
+    const mask = doc.context.lookup(maskRef) as PDFRawStream
+
+    // A mask that deflates to near nothing is the signature of a constant buffer.
+    expect(mask.contents.length).toBeGreaterThan(64)
   })
 
   it('never grows a stream it cannot improve', async () => {

@@ -11,7 +11,7 @@ import {
   type PDFContext,
   type PDFDocument,
 } from 'pdf-lib'
-import { rgbaToAlpha, samplesToRgba, type ImageCodec, type RawImage } from './adapters/codec'
+import { rgbaToGray, samplesToRgba, type ImageCodec, type RawImage } from './adapters/codec'
 import { scanPlacements, type PlacementMap } from './placement'
 
 /** A resize failure should cost the compression, not the image. */
@@ -216,6 +216,17 @@ function assignImage(
   context.assign(ref, PDFRawStream.of(dict, bytes))
 }
 
+/** Range of values in a plane. Zero means every pixel is identical. */
+function spread(plane: Uint8Array): number {
+  let min = 255
+  let max = 0
+  for (const value of plane) {
+    if (value < min) min = value
+    if (value > max) max = value
+  }
+  return max - min
+}
+
 /**
  * Downsample a soft mask alongside its parent image.
  *
@@ -243,7 +254,16 @@ async function shrinkSoftMask(
   if (!decoded) return 0
 
   const resized = await codec.resize(decoded, target.width, target.height)
-  const gray = rgbaToAlpha(resized)
+  const gray = rgbaToGray(resized)
+
+  // A soft mask that has lost all variation is the failure this whole path is prone
+  // to, and it is invisible to a size check: a constant buffer always deflates
+  // smaller, so it always wins on bytes while destroying the effect it encodes.
+  // Compare against the source and refuse the swap if the gradient did not survive.
+  const before = spread(rgbaToGray(decoded))
+  const after = spread(gray)
+  if (before > 8 && after < before / 4) return 0
+
   const deflated = zlibSync(gray, { level: 9 })
   if (deflated.length >= mask.contents.length) return 0
 

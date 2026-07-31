@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "preview": "node scripts/preview.mjs",
-    "assets": "node scripts/assets.mjs"
+    "assets": "node scripts/assets.mjs",
+    "inspect": "node scripts/inspect-pdf.mjs"
   },
   "dependencies": {
     "fflate": "^0.8.2",

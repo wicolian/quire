@@ -97,11 +97,25 @@ export function rgbaToRgb(image: RawImage): Uint8Array {
   return out
 }
 
-/** Extract the alpha channel as an 8-bit gray plane, for rebuilding an /SMask. */
-export function rgbaToAlpha(image: RawImage): Uint8Array {
+/**
+ * Flatten to an 8-bit gray plane, for rebuilding an /SMask.
+ *
+ * Reads *luminance*, not the alpha channel. A PDF soft mask is a DeviceGray image
+ * whose gray levels are the opacity, and `samplesToRgba` expands that gray into R, G
+ * and B while setting alpha to a constant 255. Reading alpha back out therefore
+ * returns a uniformly opaque mask, which turns every soft shadow into a hard block.
+ *
+ * The coefficients sum to exactly 1, so a gray pixel maps back to itself unchanged.
+ */
+export function rgbaToGray(image: RawImage): Uint8Array {
   const pixels = image.width * image.height
   const out = new Uint8Array(pixels)
-  for (let i = 0; i < pixels; i++) out[i] = image.data[i * 4 + 3]
+  for (let i = 0; i < pixels; i++) {
+    const r = image.data[i * 4]
+    const g = image.data[i * 4 + 1]
+    const b = image.data[i * 4 + 2]
+    out[i] = Math.round(0.2126 * r + 0.7152 * g + 0.0722 * b)
+  }
   return out
 }
 

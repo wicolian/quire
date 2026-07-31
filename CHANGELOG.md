@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **Drop shadows, blurs and any other soft-masked effect rendered as hard opaque
+  blocks.** Downsampling a soft mask read its alpha channel, but a PDF soft mask is a
+  DeviceGray image whose *gray levels* carry the opacity. Decoding expands that gray
+  into R, G and B and sets alpha to a constant 255, so reading alpha back returned a
+  uniformly opaque mask and every shadow lost its gradient. Masks are now flattened by
+  luminance.
+
+  Two things let this ship. The existing test asserted the mask's *dimensions* matched
+  its parent, never its content, so a constant mask passed. And the only guard was a
+  size check, which a constant buffer always wins because it deflates to almost
+  nothing. There is now a test asserting the gradient survives, and the mask is
+  rejected outright if its range collapses relative to the source.
+
+  Documents exported before this fix need re-exporting. `npm run inspect <file.pdf>`
+  reports soft mask sizes; a mask of roughly 0 KB is the signature of the bug.
+
 ## 0.1.0
 
 First release. Quire exports Figma sections as ordered, merged, compressed PDFs.
