@@ -1,5 +1,14 @@
 # Publishing Quire to the Figma Community
 
+> **Published.** https://www.figma.com/community/plugin/1664934401602333582
+>
+> The plugin id is now recorded in `manifest.json` and must never change. Removing or
+> altering it makes Figma treat the next publish as a brand new plugin rather than an
+> update to this listing.
+>
+> Everything below is kept as the record of what was submitted, and as the procedure
+> for shipping updates. See [Shipping an update](#shipping-an-update).
+
 **Publishing cannot be automated.** Figma has no API, CLI or MCP endpoint for submitting
 a plugin. Their own documentation is explicit: "You can only submit plugins from the
 Figma desktop app." A Figma personal access token does not help either, because the REST
@@ -18,12 +27,9 @@ Publish from the **koushiktwitter** account.
    publishes owns the plugin permanently, and moving it later means transferring or
    republishing from scratch.
 
-2. **Plugin id: already handled.** `manifest.json` deliberately has no `id` field.
-   Figma writes a real one into the manifest the first time you publish, and local
-   development works without it.
-
-   If you ever see an `id` reappear that you did not publish under, it is a stale
-   value and should be removed before submitting.
+2. **Plugin id.** `manifest.json` now carries the id Figma assigned on first publish,
+   `1664934401602333582`. Never change or remove it. Without it Figma treats the next
+   publish as a brand new plugin instead of an update to the existing listing.
 
 3. **Build fresh.** `npm run build`. The `dist/` directory is gitignored, so a clean
    clone must build before importing.
@@ -131,11 +137,8 @@ sections
 | Asset | File | Size |
 | --- | --- | --- |
 | Plugin icon | `assets/icon-128.png` | 128 x 128 |
-| Thumbnail | `assets/cover-1920x1080.png` | 1920 x 1080 |
+| Thumbnail | `assets/cover.png` | 1920 x 1080 |
 | Spare high res icon | `assets/icon-512.png` | 512 x 512 |
-
-Note that Figma asks for a **1920 x 1080** thumbnail. `assets/cover.png` is 1920 x 960,
-which is the older ratio, so use `cover-1920x1080.png`.
 
 Sources are `assets/icon.svg` and `assets/cover.svg`. To re-render after editing:
 
@@ -143,9 +146,17 @@ Sources are `assets/icon.svg` and `assets/cover.svg`. To re-render after editing
 npm run assets
 ```
 
-ImageMagick alone cannot render `cover.svg`, since there is no librsvg delegate
-installed and the internal renderer drops the CSS and text. The script uses Chrome for
-that one.
+Two things that script exists to get right, both of which produced a broken asset
+before it did:
+
+- **ImageMagick cannot render `cover.svg`.** There is no librsvg delegate on a default
+  macOS install, and the internal renderer drops the CSS and text without erroring, so
+  it writes nothing at all. The script uses Chrome.
+- **Chrome renders an `.svg` file at its intrinsic size.** A 128 x 128 icon opened in a
+  512 x 512 window lands as a small mark in the top left corner, and scaling that
+  screenshot down shrinks the artwork rather than the canvas. The script wraps each SVG
+  in an HTML page that stretches it to the viewport, then checks the output has ink in
+  more than one quadrant so a corner-stranded render fails loudly instead of shipping.
 
 ---
 
@@ -164,8 +175,23 @@ Quire's answers are straightforward, since it does nothing over the network:
 
 ---
 
-## After publishing
+## Shipping an update
 
-The plugin gets a Community URL of the form
-`https://www.figma.com/community/plugin/<id>/quire`. Add it to the README install
-section, replacing the "not yet on the Figma Community" note.
+Code changes go out as an update to the same listing, not as a new submission.
+
+1. `npm run build`. `dist/` is gitignored, so a clean clone must build first, and the
+   built bundle is what Figma ships.
+2. Figma desktop, `Plugins` then `Manage plugins`, find Quire, then `Publish update`.
+3. Write a release note. Keep it in `CHANGELOG.md` too, so the repo and the listing
+   agree.
+4. Tag the repo and cut a GitHub release to match:
+
+   ```bash
+   git tag v0.2.0 && git push origin v0.2.0
+   gh release create v0.2.0 --notes-file <notes>
+   ```
+
+Listing text, tags, icon and thumbnail can be edited at any time without publishing a
+new build.
+
+**Do not touch the `id` in `manifest.json`.** It is the identity of the listing.

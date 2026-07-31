@@ -8,6 +8,10 @@
 Export a Figma section as a multi page PDF, reorder the pages, split it, and hit a file size limit.</p>
 
 <p align="center">
+  <a href="https://www.figma.com/community/plugin/1664934401602333582"><strong>Install from the Figma Community</strong></a>
+</p>
+
+<p align="center">
   <a href="#install">Install</a> &middot;
   <a href="#how-the-pdf-compression-works">How compression works</a> &middot;
   <a href="#faq">FAQ</a> &middot;
@@ -66,7 +70,13 @@ size without turning your text into a picture.
 
 ## Install
 
-Not yet on the Figma Community. To run it now:
+**[Install from the Figma Community](https://www.figma.com/community/plugin/1664934401602333582)**
+
+That is the only step for normal use. It runs in both the desktop app and the browser.
+
+### Run from source
+
+For development, or to build it yourself:
 
 ```bash
 git clone https://github.com/wicolian/quire.git
@@ -77,6 +87,7 @@ npm run build
 
 In the **Figma desktop app**: `Plugins` then `Development` then
 `Import plugin from manifest...` and pick `manifest.json` from this directory.
+Development plugins require the desktop app; the published version does not.
 
 `npm run watch` rebuilds on change. Re-run the plugin in Figma to pick up a rebuild.
 
@@ -133,8 +144,8 @@ so the image pass correctly finds nothing to do. Compression earns its keep on
 documents containing screenshots.
 
 **Does it work in the Figma browser version?**
-Development plugins require the Figma desktop app. Once published to the Community it
-will run in both.
+Yes. The published Community version runs in both the browser and the desktop app. Only
+running it from source requires the desktop app.
 
 **Is my data uploaded anywhere?**
 No. There is no network code and the manifest declares `"allowedDomains": ["none"]`.

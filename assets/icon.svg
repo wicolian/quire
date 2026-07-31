@@ -7,13 +7,16 @@
 
     Uncoated stock ground, press-black leaves, registration-red spine, the one place
     the accent colour appears, because the spine is the thing this plugin is about.
+
+    Strokes are heavy and gaps are tight on purpose. Figma renders this at 16 to 32px
+    in the plugin menu, where thin bars separated by air turn to mush.
   -->
   <rect width="128" height="128" rx="28" fill="#F6F3ED" />
   <rect x="0.75" y="0.75" width="126.5" height="126.5" rx="27.25" fill="none" stroke="#1F1B16" stroke-opacity="0.12" stroke-width="1.5" />
   <g stroke-linecap="round" fill="none">
-    <path d="M34 26v76" stroke="#C8322A" stroke-width="10" />
-    <path d="M55 34v60" stroke="#1F1B16" stroke-width="6" opacity="0.72" />
-    <path d="M74 28v72" stroke="#1F1B16" stroke-width="6" opacity="0.52" />
-    <path d="M93 37v54" stroke="#1F1B16" stroke-width="6" opacity="0.32" />
+    <path d="M33 25v78" stroke="#C8322A" stroke-width="13" />
+    <path d="M57 33v62" stroke="#1F1B16" stroke-width="9" opacity="0.72" />
+    <path d="M78 27v74" stroke="#1F1B16" stroke-width="9" opacity="0.5" />
+    <path d="M98 36v56" stroke="#1F1B16" stroke-width="9" opacity="0.3" />
   </g>
 </svg>
