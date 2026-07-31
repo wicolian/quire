@@ -6,8 +6,23 @@
 /** Punctuation no major filesystem tolerates. */
 const UNSAFE_PUNCT = /[\\/:*?"<>|]/g
 
-/** Dash-like characters common in document names, collapsed to a plain hyphen. */
-const FANCY_DASH = /[‐‑‒–—―−]/g
+/**
+ * Dash-like code points that show up in document names: the various hyphens, figure
+ * dash, en dash, em dash, horizontal bar and minus sign.
+ *
+ * Listed as code points rather than as literal characters in a character class. A
+ * class of visually near-identical dashes is unreadable, and one careless edit turns
+ * it into an out-of-order range that fails to compile, which is exactly what happened.
+ */
+const FANCY_DASHES = new Set([0x2010, 0x2011, 0x2012, 0x2013, 0x2014, 0x2015, 0x2212])
+
+function normalizeDashes(input: string): string {
+  let out = ''
+  for (const char of input) {
+    out += FANCY_DASHES.has(char.codePointAt(0)!) ? '-' : char
+  }
+  return out
+}
 
 /** Windows refuses these as filenames regardless of extension. */
 const RESERVED = new Set([
@@ -30,14 +45,13 @@ function stripControlChars(input: string): string {
 /**
  * Turn a Figma layer name into a filename stem.
  *
- * Em dashes are common in document names ("Doc 2 — Databrain") and are legal in
+ * Long dashes are common in document names and are legal in
  * filenames, but they travel badly through email and URLs, so they collapse to
  * hyphens along with whitespace.
  */
 export function sanitizeStem(name: string, fallback = 'Untitled'): string {
-  let stem = stripControlChars(name.normalize('NFC'))
+  let stem = normalizeDashes(stripControlChars(name.normalize('NFC')))
     .replace(UNSAFE_PUNCT, '')
-    .replace(FANCY_DASH, '-')
     .replace(/\s+/g, '-')
     .replace(/-{2,}/g, '-')
     .replace(/^[-.]+|[-.]+$/g, '')

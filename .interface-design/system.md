@@ -1,4 +1,4 @@
-# Quire — interface system
+# Quire, interface system
 
 Decisions already made. Follow these rather than re-deriving them; where new work
 conflicts, this file wins unless the conflict is a genuine improvement worth writing
@@ -6,7 +6,7 @@ down here.
 
 ## Direction
 
-**Prepress, not SaaS.** Quire is a press tool, and the interface is a proof sheet — not
+**Prepress, not SaaS.** Quire is a press tool, and the interface is a proof sheet, not
 a dashboard, not a settings page. The vocabulary is imposition, signatures, gathering,
 plate, stock, ink coverage. When naming something new, reach into that world first.
 
@@ -18,7 +18,7 @@ proceed is a cost.
 **Feel:** quiet, precise, slightly analogue. Warm rather than clinical. Nothing should
 announce itself except the one thing that matters.
 
-## Signature element — the spine
+## Signature element, the spine
 
 A hairline rule binds the page list down its left edge.
 
@@ -27,7 +27,7 @@ A hairline rule binds the page list down its left edge.
 - The empty state and the app icon are the same mark: gathered sheets, bound.
 
 This is the thing that makes Quire look like Quire. New surfaces should find a way to
-use it or deliberately leave it alone — never replace it with a generic progress bar or
+use it or deliberately leave it alone, never replace it with a generic progress bar or
 a divider.
 
 ## Palette
@@ -43,7 +43,7 @@ be at home in any project (`--gray-700`, `--surface-2`), it is wrong.
 | `--stock-inset` | `#efebe3` | `#131110` | Inputs, pressed segments |
 | `--ink` → `--ink-4` | `#1f1b16` → `#b3aa9c` | `#f2ede4` → `#5a5348` | Four text levels, always used |
 | `--rule` / `-soft` / `-strong` | rgba warm black | rgba warm white | Border progression |
-| `--reg` | `#c8322a` | `#e5645a` | Registration red — the **only** accent |
+| `--reg` | `#c8322a` | `#e5645a` | Registration red, the **only** accent |
 | `--blueline` | `#4a6fa5` | `#7d9fd1` | Informational marks, links |
 | `--kraft` | `#a8794a` | `#c39a6b` | Break markers, advisory notices |
 
@@ -72,7 +72,7 @@ is typewritten.
 
 - **Mono** (`--mono`, tabular figures): page numbers, frame names, dimensions, DPI, byte
   counts, filenames, all metadata lines. `font-variant-numeric: tabular-nums` is
-  non-negotiable — columns must not shift as values change.
+  non-negotiable, columns must not shift as values change.
 - **Sans** (`--sans`): control labels, prose, buttons, empty-state copy.
 
 Inter as the primary UI face would be the default here. It is not what a press tool
@@ -80,8 +80,13 @@ looks like.
 
 ## Spacing & shape
 
-Base unit **4px**. Row height **30px**. Radius: `3px` controls, `5px` buttons/cards.
-Sharper than typical — this is a technical tool.
+Base unit **4px**. Row height **34px** (mirrored by `ROW_HEIGHT` in `PageList.tsx`,
+which computes drag targets from it). Radius: `3px` controls, `5px` buttons/cards.
+Sharper than typical, this is a technical tool.
+
+The whole panel scales from one `--ui-scale` variable applied at the document root, so
+text size, icons and spacing move together. Icons are sized in `em` precisely so they
+come along.
 
 ## Component patterns
 
@@ -97,12 +102,43 @@ estimated, drops it once measured. Turns `--reg` when over.
 **Exclusion is strikethrough, not an unchecked box.** The user is assembling a document,
 not picking files from a list. Position number is the primary affordance.
 
-**Row actions appear on hover/focus-within**, never permanently — they would double the
+**Row actions appear on hover/focus-within**, never permanently, they would double the
 visual weight of a list whose whole job is to be scannable.
 
-**Notices are inline and specific**, carrying a mark (`⚠` `ℹ`) in `--kraft` or `--reg`
+**Notices are inline and specific**, carrying a `warn` or `info` icon in `--kraft` or `--reg`
 and, where there is a decision, its buttons. Never a modal, never a toast for something
 the user must act on.
+
+## Icons
+
+Drawn, never borrowed from a font. A scissors from one font and an arrow from another
+never look like the same tool, and each brings its own baseline and weight.
+
+House rules, in `Icon.tsx`: **14px grid, 1.25 stroke, round caps and joins,
+`currentColor`, no fills.** Hairline and precise, like a drafting instrument. Size in
+`em` so icons scale with surrounding text.
+
+Text glyphs as icons are banned. That is what this replaced.
+
+## Motion
+
+**Corporate archetype, zero overshoot.** Bounce reads as a toy in a tool used in ten
+second bursts.
+
+Three constants, in `styles.css`:
+
+- Signature easing `--ease: cubic-bezier(0.2, 0, 0, 1)`, with `--ease-enter` for
+  entrances and `--ease-exit` for exits.
+- Durations `--t-quick: 120ms`, `--t-base: 200ms`, `--t-slow: 320ms`.
+- One entrance pattern: fade plus a 4px rise. **Never scale**, because paper does not
+  grow.
+
+The metaphor drives it, not decoration: sheets settle onto a stack, ink floods down the
+spine, the blade cuts outward from the break marker. Motion carries a relationship the
+static state cannot, which is why the segmented selection slides rather than crossfades.
+
+Everything is disabled under `prefers-reduced-motion`. Motion is never load-bearing:
+every state expressed by movement is also expressed by colour, position or text.
 
 ## States that must exist
 
@@ -112,8 +148,9 @@ active, focus-visible, disabled.
 Two empty states, never one: "nothing selected" and "selected thing is empty" need
 different answers, and collapsing them leaves the second looking broken.
 
-Focus rings are `--reg`, 1.5px, offset 1px. Keyboard users are not an afterthought in a
-tool used this repetitively.
+Focus rings are `--blueline`, 2px, offset 1px. Not red: a red ring around a small text
+button reads as an error state, which is exactly how it looked before this changed.
+Keyboard users are not an afterthought in a tool used this repetitively.
 
 ## Pitfalls already hit
 
@@ -123,7 +160,7 @@ misaligned by conventional measure. Full-width elements (segmented controls, the
 set the edge; everything else aligns to it or is deliberately a left-aligned group.
 
 **Never use `:first-child` for group boundaries.** List rows sit in wrapper elements, so
-`:first-child` matches all of them. It dashed the spine into one segment per row —
+`:first-child` matches all of them. It dashed the spine into one segment per row -
 silently destroying the signature element. Compute `first-in-group` / `last-in-group`
 explicitly and pass them as classes.
 
@@ -137,15 +174,21 @@ themes needs a token defined per-theme, not a reused one.
 horizontal overflow.
 
 **Verify layout by rendering, not by reading CSS.** `npm run preview` renders the panel
-headlessly in both themes. Note that headless Chrome clamps windows to 500px minimum —
+headlessly in both themes. Note that headless Chrome clamps windows to 500px minimum -
 the script pins the document to the true panel size and crops, because screenshotting a
 420px window silently gives a 500px viewport and makes correct layout look broken.
 
 ## Copy
 
+**No em dashes, no en dashes, no bullet or circle characters** anywhere: not in UI copy,
+not in docs, not in code comments. They read as machine-written. Use a comma, a colon or
+a full stop. A repo-wide sweep enforces this, so write dashes as escapes (`\u2014`) when
+they are the actual subject of a test, or the sweep silently turns the test into a test
+of nothing.
+
 Plain, specific, no exclamation marks. State real numbers:
-*"9.1 MB — still over 8 MB"*, not *"File too large"*. Name the thing that failed:
+*"9.1 MB, still over 8 MB"*, not *"File too large"*. Name the thing that failed:
 *"11 of 12 pages exported. D2-06 failed."*
 
-Never claim something happened that did not. Never degrade output silently — if the tool
+Never claim something happened that did not. Never degrade output silently, if the tool
 is about to do something lossy, it says so and waits.

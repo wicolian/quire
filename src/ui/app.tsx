@@ -15,18 +15,21 @@ import {
   type PageRef,
   type SortMode,
 } from '../core/types'
-import type { MainToUi } from '../shared/messages'
+import type { MainToUi, Prefs } from '../shared/messages'
+import { DEFAULT_PREFS } from '../shared/messages'
 import { onMessage, requestPages, send, yieldToUi } from './bridge'
 import { deliver } from './download'
 import { Controls } from './components/Controls'
 import { EmptyState } from './components/EmptyState'
 import { PageList } from './components/PageList'
+import { Icon } from './components/Icon'
+import { ResizeGrip } from './components/ResizeGrip'
 import { ScanList } from './components/ScanList'
 
 /**
  * Quire's state.
  *
- * One document is "current" at a time — the one selected on the canvas. The scan view
+ * One document is "current" at a time: the one selected on the canvas. The scan view
  * is a separate mode rather than a merged list, because batch-exporting five documents
  * and arranging one document are different tasks and mixing their controls would serve
  * neither.
@@ -54,8 +57,37 @@ export function App() {
   const [scanProgress, setScanProgress] = useState<{ done: number; total: number } | null>(null)
   const [flattenOffer, setFlattenOffer] = useState<{ filename: string; bytes: number; cap: number } | null>(null)
 
+  const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS)
+
   const cancelSignal = useRef({ cancelled: false })
   const doc = docs[0] ?? null
+
+  // The scale is applied at the document root so it covers everything the panel
+  // renders, including icons, which are sized in em for exactly this reason.
+  useEffect(() => {
+    document.documentElement.style.setProperty('--ui-scale', String(prefs.uiScale))
+  }, [prefs.uiScale])
+
+  const commitPrefs = useCallback((next: Prefs) => {
+    setPrefs(next)
+    send({ type: 'set-prefs', prefs: next })
+  }, [])
+
+  const handleResize = useCallback((width: number, height: number) => {
+    send({ type: 'resize', width, height })
+  }, [])
+
+  const handleResizeCommit = useCallback(
+    (width: number, height: number) => {
+      // Written once on release rather than on every pointer move.
+      setPrefs((current) => {
+        const next = { ...current, width, height }
+        send({ type: 'set-prefs', prefs: next })
+        return next
+      })
+    },
+    [],
+  )
 
   // ── sandbox messages ──────────────────────────────────────────────────────
 
@@ -74,6 +106,11 @@ export function App() {
         }
         setReport(null)
         setFlattenOffer(null)
+        return
+      }
+
+      if (message.type === 'prefs') {
+        setPrefs(message.prefs)
         return
       }
 
@@ -155,7 +192,7 @@ export function App() {
   const handleReorder = useCallback(
     (from: number, to: number) => {
       // Any manual move means the user has overridden the sort; saying so keeps the
-      // A–Z button from silently undoing their work on the next open.
+      // A-Z button from silently undoing their work on the next open.
       persist({ ...arrangement, sortMode: 'manual', order: movePage(arrangement.order, from, to) })
     },
     [arrangement, persist],
@@ -241,7 +278,7 @@ export function App() {
           type: 'notify',
           message:
             result.failedPages.length > 0
-              ? `${delivered.filename} — ${result.failedPages.length} page(s) failed`
+              ? `${delivered.filename}, ${result.failedPages.length} page(s) failed`
               : `${delivered.filename} downloaded`,
           error: result.failedPages.length > 0,
         })
@@ -326,7 +363,7 @@ export function App() {
         bytesSavedByImages: 0,
       })
       deliver([file], doc.name)
-      send({ type: 'notify', message: `${file.filename} downloaded — ${formatBytes(bytes.length)}` })
+      send({ type: 'notify', message: `${file.filename} downloaded, ${formatBytes(bytes.length)}` })
     } catch (error) {
       setBusy(null)
       if (!(error instanceof CancelledError)) {
@@ -347,11 +384,12 @@ export function App() {
 
     return (
       <div class="app">
+        <ResizeGrip onResize={handleResize} onCommit={handleResizeCommit} />
         <div class="masthead">
           <div class="masthead-row">
             <div class="doc-name">Whole file</div>
             <button class="icon-button" onClick={() => setMode('document')} title="Back to selection">
-              ✕
+              <Icon name="close" title="Back to selection" />
             </button>
           </div>
           <div class="doc-meta mono">
@@ -396,6 +434,7 @@ export function App() {
   if (!doc) {
     return (
       <div class="app">
+        <ResizeGrip onResize={handleResize} onCommit={handleResizeCommit} />
         <EmptyState
           reason="no-selection"
           scanning={scanning}
@@ -412,6 +451,7 @@ export function App() {
   if (doc.pages.length === 0) {
     return (
       <div class="app">
+        <ResizeGrip onResize={handleResize} onCommit={handleResizeCommit} />
         <EmptyState
           reason="empty-section"
           sectionName={doc.name}
@@ -432,6 +472,7 @@ export function App() {
 
   return (
     <div class="app">
+      <ResizeGrip onResize={handleResize} onCommit={handleResizeCommit} />
       <div class="masthead">
         <div class="masthead-row">
           <div class="doc-name" title={doc.name}>
@@ -443,7 +484,7 @@ export function App() {
             title="Reload from canvas"
             disabled={!!busy}
           >
-            ↻
+            <Icon name="refresh" title="Reload from canvas" />
           </button>
         </div>
         <div class="doc-meta mono">
@@ -469,7 +510,7 @@ export function App() {
           onClick={() => applySort('alpha')}
           disabled={!!busy}
         >
-          A–Z
+          A-Z
         </button>
         <button
           class="chip"
@@ -477,7 +518,7 @@ export function App() {
           onClick={() => applySort('alpha-desc')}
           disabled={!!busy}
         >
-          Z–A
+          Z-A
         </button>
         <button
           class="chip"
@@ -487,7 +528,7 @@ export function App() {
           disabled={!!busy}
           title="Reverse the current order"
         >
-          ⇅
+          <Icon name="reverse" title="Reverse order" />
         </button>
         <div class="orderbar-spacer" />
         {arrangement.sortMode === 'manual' && <span class="chip mono">manual</span>}
@@ -495,8 +536,8 @@ export function App() {
 
       {sizes.size > 1 && (
         <div class="notice">
-          <span class="notice-mark" aria-hidden="true">
-            ⚠
+          <span class="notice-mark">
+            <Icon name="warn" />
           </span>
           <span>
             Mixed page sizes: {[...sizes].join(', ')}. The PDF will keep each page at its own size.
@@ -506,17 +547,17 @@ export function App() {
 
       {doc.adHoc && (
         <div class="notice">
-          <span class="notice-mark" aria-hidden="true">
-            ℹ
+          <span class="notice-mark">
+            <Icon name="info" />
           </span>
-          <span>Loose frame selection — this order is not saved. Wrap them in a section to keep it.</span>
+          <span>Loose frame selection. This order is not saved. Wrap them in a section to keep it.</span>
         </div>
       )}
 
       {report && report.failedPages.length > 0 && (
         <div class="notice warn">
-          <span class="notice-mark" aria-hidden="true">
-            ⚠
+          <span class="notice-mark">
+            <Icon name="warn" />
           </span>
           <span>
             {report.files.reduce((sum, f) => sum + f.pageCount, 0)} of {includedPages.length} pages
@@ -527,11 +568,11 @@ export function App() {
 
       {flattenOffer && (
         <div class="notice warn">
-          <span class="notice-mark" aria-hidden="true">
-            ⚠
+          <span class="notice-mark">
+            <Icon name="warn" />
           </span>
           <span>
-            {formatBytes(flattenOffer.bytes)} — still over {formatBytes(flattenOffer.cap)} after
+            {formatBytes(flattenOffer.bytes)}, still over {formatBytes(flattenOffer.cap)} after
             compressing. Flattening rasterizes the pages: smaller, but the text stops being
             selectable.
             <div class="notice-actions">
@@ -546,7 +587,10 @@ export function App() {
         </div>
       )}
 
+      {/* Keyed by document so the settle cascade replays when you select a different
+          section, but not when you reorder or exclude within one. */}
       <PageList
+        key={doc.id}
         pages={orderedPages}
         excluded={excluded}
         breaks={breaks}
@@ -565,6 +609,8 @@ export function App() {
         measuredBytes={measured}
         onChange={setSettings}
         busy={!!busy}
+        uiScale={prefs.uiScale}
+        onUiScaleChange={(uiScale) => commitPrefs({ ...prefs, uiScale })}
       />
 
       <div class="footer">

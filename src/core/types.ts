@@ -53,7 +53,7 @@ export const EMPTY_ARRANGEMENT: Arrangement = {
 
 export type StockId = 'email' | 'web' | 'print' | 'custom'
 
-/** A quality preset — "paper stock" in the UI. */
+/** A quality preset, "paper stock" in the UI. */
 export interface Stock {
   id: StockId
   label: string
@@ -61,7 +61,7 @@ export interface Stock {
   capBytes: number | null
   /** Target resolution for embedded images, in DPI. */
   dpi: number
-  /** JPEG quality, 0–1. */
+  /** JPEG quality, 0-1. */
   quality: number
 }
 

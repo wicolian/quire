@@ -12,7 +12,7 @@ import type { PageRef } from '../src/core/types'
  *
  * Everything else in this suite runs on fixtures this repo builds itself. Those prove
  * the logic, but they cannot prove Quire survives the specific structures Figma emits
- * — its font subsetting, its colour spaces, its content stream style.
+ *, its font subsetting, its colour spaces, its content stream style.
  *
  * To run these: export some frames from Figma as PDF (one file per frame) and drop
  * them into `test/fixtures/real/`. That directory is gitignored, so nobody's marketing

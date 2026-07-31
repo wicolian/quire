@@ -24,7 +24,7 @@ describe('naturalCompare', () => {
     ])
   })
 
-  it('handles the reference document’s zero-padded names', () => {
+  it("handles the reference document's zero-padded names", () => {
     const names = ['D2-12 Closing', 'D2-01 Cover', 'D2-03 Comparison table', 'D2-02 Introduction']
     expect(names.slice().sort(naturalCompare)).toEqual([
       'D2-01 Cover',

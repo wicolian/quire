@@ -2,6 +2,8 @@ import { useState } from 'preact/hooks'
 import { STOCKS, STOCK_ORDER, parseMegabytes, resolveParams } from '../../core/budget'
 import { formatBytes } from '../../core/naming'
 import type { ExportSettings, StockId } from '../../core/types'
+import { Icon } from './Icon'
+import { Segmented } from './Segmented'
 
 /**
  * The controls.
@@ -12,7 +14,7 @@ import type { ExportSettings, StockId } from '../../core/types'
  * choice under the less consequential one.
  *
  * Both selectors are the same segmented control, because they are the same kind of
- * decision — a small closed set where hiding the options behind a dropdown would cost
+ * decision, a small closed set where hiding the options behind a dropdown would cost
  * more than showing them.
  */
 
@@ -23,9 +25,20 @@ export interface ControlsProps {
   measuredBytes: number | null
   onChange: (settings: ExportSettings) => void
   busy: boolean
+  /** Panel text size. Applied at the document root, so it scales icons too. */
+  uiScale: number
+  onUiScaleChange: (scale: number) => void
 }
 
-export function Controls({ settings, estimatedBytes, measuredBytes, onChange, busy }: ControlsProps) {
+export function Controls({
+  settings,
+  estimatedBytes,
+  measuredBytes,
+  onChange,
+  busy,
+  uiScale,
+  onUiScaleChange,
+}: ControlsProps) {
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const params = resolveParams(settings)
   const bytes = measuredBytes ?? estimatedBytes
@@ -42,42 +55,27 @@ export function Controls({ settings, estimatedBytes, measuredBytes, onChange, bu
     <div class="controls">
       <div class="block">
         <div class="label">Output</div>
-        <div class="segmented" role="group" aria-label="Output mode">
-          <button
-            class="segment"
-            aria-pressed={settings.output === 'combined'}
-            disabled={busy}
-            onClick={() => patch({ output: 'combined' })}
-          >
-            Combined
-          </button>
-          <button
-            class="segment"
-            aria-pressed={settings.output === 'split'}
-            disabled={busy}
-            onClick={() => patch({ output: 'split' })}
-            title="One PDF per page"
-          >
-            Split
-          </button>
-        </div>
+        <Segmented
+          label="Output mode"
+          disabled={busy}
+          value={settings.output}
+          onChange={(output) => patch({ output })}
+          options={[
+            { value: 'combined', label: 'Combined', title: 'One PDF, split at break markers' },
+            { value: 'split', label: 'Split', title: 'One PDF per page' },
+          ]}
+        />
       </div>
 
       <div class="block">
         <div class="label">Stock</div>
-        <div class="segmented" role="group" aria-label="Quality preset">
-          {STOCK_ORDER.map((id: StockId) => (
-            <button
-              key={id}
-              class="segment"
-              aria-pressed={settings.stock === id}
-              disabled={busy}
-              onClick={() => patch({ stock: id })}
-            >
-              {STOCKS[id].label}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          label="Quality preset"
+          disabled={busy}
+          value={settings.stock}
+          onChange={(stock) => patch({ stock })}
+          options={STOCK_ORDER.map((id: StockId) => ({ value: id, label: STOCKS[id].label }))}
+        />
 
         {settings.stock === 'custom' && (
           <div class="limit-row">
@@ -119,11 +117,17 @@ export function Controls({ settings, estimatedBytes, measuredBytes, onChange, bu
           onClick={() => setAdvancedOpen(!advancedOpen)}
           aria-expanded={advancedOpen}
         >
-          <span aria-hidden="true">{advancedOpen ? '⌄' : '›'}</span> Advanced
+          <span class="disclosure-chevron">
+            <Icon name="chevron" size={0.9} />
+          </span>
+          Advanced
         </button>
 
-        {advancedOpen && (
-          <div class="advanced">
+        {/* Kept mounted rather than conditionally rendered, so it animates closed as
+            well as open. Hidden from focus and assistive tech via CSS visibility. */}
+        <div class={`drawer${advancedOpen ? ' open' : ''}`} aria-hidden={!advancedOpen}>
+          <div class="drawer-inner">
+            <div class="advanced">
             <label class="field">
               <span>Image DPI</span>
               <input
@@ -178,17 +182,33 @@ export function Controls({ settings, estimatedBytes, measuredBytes, onChange, bu
               Add PDF bookmarks from frame names
             </label>
 
-            {(settings.dpiOverride !== null || settings.qualityOverride !== null) && (
-              <button
-                class="link"
-                style={{ justifySelf: 'start' }}
-                onClick={() => patch({ dpiOverride: null, qualityOverride: null })}
-              >
-                Reset to {STOCKS[settings.stock].label} defaults
-              </button>
-            )}
+              <div class="field">
+                <span>Text size</span>
+                <Segmented
+                  label="Panel text size"
+                  value={String(uiScale)}
+                  onChange={(value) => onUiScaleChange(Number(value))}
+                  options={[
+                    { value: '0.9', label: 'S', title: 'Small' },
+                    { value: '1', label: 'M', title: 'Default' },
+                    { value: '1.15', label: 'L', title: 'Large' },
+                  ]}
+                />
+                <span class="field-value" />
+              </div>
+
+              {(settings.dpiOverride !== null || settings.qualityOverride !== null) && (
+                <button
+                  class="link"
+                  style={{ justifySelf: 'start' }}
+                  onClick={() => patch({ dpiOverride: null, qualityOverride: null })}
+                >
+                  Reset to {STOCKS[settings.stock].label} defaults
+                </button>
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   )

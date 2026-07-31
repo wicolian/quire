@@ -9,7 +9,7 @@ const run = promisify(execFile)
  * Figma.
  *
  * The UI realm only needs a sandbox to talk to, so this stubs the message it actually
- * depends on — the `selection` reply — and renders `dist/ui.html` in Chrome at the
+ * depends on, the `selection` reply, and renders `dist/ui.html` in Chrome at the
  * real panel width. It catches the class of bug that costs the most time otherwise:
  * overflow, misalignment, contrast that collapses in one theme.
  *
@@ -56,7 +56,7 @@ const PAGES = [
   'D3-11 Appendix',
 ]
 
-function harness({ dark, stock, breaks, excluded }) {
+function harness({ dark, stock, breaks, excluded, press }) {
   return `
 <script>
 (function(){
@@ -110,6 +110,17 @@ function harness({ dark, stock, breaks, excluded }) {
          }, 120);`
       : ''
   }
+
+  ${
+    press
+      ? `// Marks rows pressed at a known moment so the ink fill can be caught partway
+         // through. The real trigger is export progress; this only exercises the CSS.
+         setTimeout(function(){
+           [].slice.call(document.querySelectorAll(".row"))
+             .slice(0, ${press}).forEach(function(row){ row.classList.add("pressed"); });
+         }, 1000);`
+      : ''
+  }
 })();
 </script>`
 }
@@ -119,6 +130,11 @@ const SHOTS = [
   { name: 'light', dark: false },
   { name: 'dark-advanced', dark: true, stock: 'Custom' },
   { name: 'dark-breaks', dark: true, breaks: ['p2', 'p6'], excluded: ['p4'] },
+  // Ink flooding the spine, caught at three points through a 200ms transition that
+  // starts at t=1000. If these three frames are identical, the animation is not running.
+  { name: 'ink-0', dark: true, press: 6, budget: 1010 },
+  { name: 'ink-mid', dark: true, press: 6, budget: 1080 },
+  { name: 'ink-done', dark: true, press: 6, budget: 1400 },
 ]
 
 const shell = await readFile('dist/ui.html', 'utf8')
@@ -140,7 +156,7 @@ for (const shot of SHOTS) {
     '--hide-scrollbars',
     '--force-device-scale-factor=2',
     `--window-size=${WINDOW.width},${WINDOW.height}`,
-    '--virtual-time-budget=4000',
+    `--virtual-time-budget=${shot.budget ?? 4000}`,
     `--screenshot=${raw}`,
     `file://${process.cwd()}/${path}`,
   ]).catch((error) => {
@@ -149,7 +165,7 @@ for (const shot of SHOTS) {
     if (!String(error.stderr ?? '').includes('written to file')) throw error
   })
 
-  // Crop back to the true panel size — 2x for the device scale factor.
+  // Crop back to the true panel size, 2x for the device scale factor.
   await run('magick', [
     raw,
     '-crop',

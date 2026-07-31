@@ -4,7 +4,7 @@ import type { DocRef, PageRef } from '../core/types'
  * Turning what the user has selected into documents and pages.
  *
  * The mapping is: a section is a document, and the frame-like nodes directly inside it
- * are its pages. Nested frames are ignored — those are the contents of a page, not
+ * are its pages. Nested frames are ignored, those are the contents of a page, not
  * pages themselves.
  */
 
@@ -77,7 +77,7 @@ export function readSelection(): DocRef[] {
  * Walk the whole file for sections.
  *
  * Under `documentAccess: dynamic-page` the other canvas pages are not loaded until
- * asked for, so this is genuinely expensive on a large file — hence it is an explicit
+ * asked for, so this is genuinely expensive on a large file, hence it is an explicit
  * button rather than something that happens on open.
  */
 export async function scanFile(onProgress?: (done: number, total: number) => void): Promise<DocRef[]> {

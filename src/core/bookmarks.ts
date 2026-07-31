@@ -4,7 +4,7 @@ import { PDFArray, PDFDict, PDFName, PDFNull, PDFNumber, PDFRef, PDFString, type
  * A PDF outline built from frame names.
  *
  * pdf-lib has no outline API, so this writes the object graph by hand. It is a flat,
- * single-level list — Figma frame names carry no hierarchy, and inventing one from
+ * single-level list, Figma frame names carry no hierarchy, and inventing one from
  * name prefixes would guess wrong the moment someone renames a frame.
  *
  * The structure the PDF spec requires:
@@ -25,7 +25,7 @@ export function addOutline(doc: PDFDocument, titles: string[]): void {
   for (let i = 0; i < count; i++) itemRefs.push(context.nextRef())
 
   for (let i = 0; i < count; i++) {
-    // "Top of the page at the current zoom" — /XYZ with nulls leaves the viewer's
+    // "Top of the page at the current zoom", /XYZ with nulls leaves the viewer's
     // zoom alone, which is what you want when clicking through a document.
     const destination = PDFArray.withContext(context)
     destination.push(pages[i].ref)

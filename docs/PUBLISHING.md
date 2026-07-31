@@ -1,41 +1,51 @@
 # Publishing Quire to the Figma Community
 
-**Publishing cannot be automated.** Figma has no API, CLI, or MCP endpoint for
-submitting a plugin — it is a Figma desktop app flow, and it goes through human review.
-Everything below is prepared so the actual submission takes a couple of minutes.
+**Publishing cannot be automated.** Figma has no API, CLI or MCP endpoint for submitting
+a plugin. Their own documentation is explicit: "You can only submit plugins from the
+Figma desktop app." A Figma personal access token does not help either, because the REST
+API has no plugin publishing surface at all.
 
-Publish from the **koushikwitter@gmail.com** account.
+Everything below is prepared so the submission itself takes a few minutes.
+
+Publish from the **koushiktwitter** account.
 
 ---
 
 ## Before you start
 
-1. **Sign into the right account.** Figma desktop → avatar → make sure the active
-   account is `koushikwitter@gmail.com`, not the Databrain one. The plugin is owned
-   permanently by whichever account publishes it, and moving it later means
-   transferring or republishing.
+1. **Confirm the active account.** Figma desktop, click your avatar, make sure the
+   active account is the personal one and not the Databrain one. Whichever account
+   publishes owns the plugin permanently, and moving it later means transferring or
+   republishing from scratch.
 
-2. **Change the plugin id.** `manifest.json` currently has a development id:
+2. **Remove the development plugin id.** `manifest.json` currently carries a
+   placeholder:
 
    ```json
    "id": "quire-pdf-export-local-dev"
    ```
 
-   Figma assigns a real id the first time you publish. Delete the `id` line entirely
-   before publishing, or let Figma overwrite it — do not keep the placeholder.
+   Figma assigns a real id on first publish. Delete that line before publishing, or let
+   Figma overwrite it. Do not ship the placeholder.
 
 3. **Build fresh.** `npm run build`. The `dist/` directory is gitignored, so a clean
-   clone has to build before importing.
+   clone must build before importing.
+
+4. **Run it against a real document once.** Ideally one with screenshots in it, since a
+   vector only document exercises none of the compression path.
 
 ## The submission
 
-1. Figma desktop → open any file → **Plugins → Development → Import plugin from
-   manifest…** → choose `manifest.json`.
-2. Run it once and confirm it works against a real section.
-3. **Plugins → Development → Quire → Publish…**
-4. Fill in the listing using the copy below.
-5. Upload the assets from `assets/`.
-6. Submit. Review typically takes a few days.
+1. Figma desktop, open any file.
+2. Click the Figma logo, top left, then `Plugins` then `Manage plugins`.
+3. Click the icon next to Quire and choose `Publish`.
+4. **Describe your resource:** use the copy below.
+5. **Choose some images:** icon and thumbnail from `assets/`, listed below.
+6. **Data security:** complete the disclosure form. Quire's answers are simple, see
+   below.
+7. **Final details:** publish as yourself, add a support contact, confirm the network
+   access label reads `No access to network`.
+8. Submit. Review can take up to two weeks.
 
 ---
 
@@ -47,7 +57,7 @@ Publish from the **koushikwitter@gmail.com** account.
 Quire
 ```
 
-### Tagline (max ~60 chars)
+### Tagline
 
 ```
 Sections to PDF. Ordered, merged, actually compressed.
@@ -56,91 +66,109 @@ Sections to PDF. Ordered, merged, actually compressed.
 ### Description
 
 ```
-Figma can export several frames as one PDF. It won't let you control the page order,
-and it won't compress the result — so a document with screenshots comes out at whatever
-size the images happen to be, with no way to land under an attachment limit.
+Figma can export several frames as one PDF. It will not let you control the page order,
+and it will not compress the result. So a document with screenshots comes out at
+whatever size the images happen to be, with no way to land under an attachment limit.
 
-Quire is that missing half.
+Quire is the missing half.
 
 SELECT A SECTION
-The frames inside it become your pages. Or select loose frames and export those.
+The frames inside it become your pages. Loose frame selections work too.
 
 ORDER THEM PROPERLY
-Canvas position, A–Z, Z–A, or drag them yourself. Natural sort, so "D2-2" comes before
-"D2-10" instead of after it. Your manual order is saved into the file — re-exporting in
-three months doesn't mean re-dragging twelve rows.
+Canvas position, A to Z, Z to A, or drag them yourself. Natural sort, so "D2-2" comes
+before "D2-10" instead of after it. Your manual order is saved into the file, so
+re-exporting in three months does not mean re-dragging twelve rows. New frames appear
+at the end, flagged, instead of being guessed into position.
 
 SPLIT ANYWHERE
 Drop a break marker between any two pages to cut the document into separate PDFs. Or
 emit one PDF per page. Multiple files come down as a single ZIP.
 
 SET A SIZE LIMIT AND HIT IT
-Pick a stock — Email (10 MB), Web (5 MB), Print (uncapped), or type an exact number.
-Quire downsamples and re-encodes the images inside your PDF based on how large they're
+Pick a preset, Email at 10 MB, Web at 5 MB, Print uncapped, or type an exact number.
+Quire downsamples and re-encodes the images inside your PDF based on how large they are
 actually drawn, not their pixel dimensions. A 2000px logo placed at 40pt is being shown
-at ~3600 DPI and is nearly pure waste; the same bitmap across a full page is fine and
-gets left alone.
+at roughly 3600 DPI and is nearly pure waste. The same bitmap across a full page is
+fine and gets left alone.
 
 Text stays text. Fonts stay embedded. Your PDF stays selectable and searchable. If a
-size cap genuinely can't be met, Quire tells you the real number and offers to flatten
-to raster — it never does that silently.
+size cap genuinely cannot be met, Quire tells you the real number and offers to flatten
+to raster. It never does that silently.
+
+ALSO
+PDF bookmarks generated from your frame names. Resizable panel and adjustable text
+size. Light and dark themes.
 
 NOTHING LEAVES YOUR MACHINE
 All PDF assembly and compression happens inside the plugin. No uploads, no servers, no
 network access at all.
 
-Open source: https://github.com/wicolian/quire
+Open source, MIT licensed: https://github.com/wicolian/quire
 ```
 
 ### Tags
 
+Figma allows a limited number, so these are ordered by search value. People search for
+the problem, not for the plugin name.
+
 ```
-pdf, export, print, documents, compression, presentation, sections, merge
+pdf
+export
+compress
+merge
+print
+documents
+presentation
+sections
 ```
 
 ### Category
 
-`Utilities` (secondary: `Design tools`)
+`Utilities`. Secondary if offered: `Design tools`.
 
 ---
 
-## Assets
+## Images
 
 | Asset | File | Size |
-|---|---|---|
-| Plugin icon | `assets/icon-128.png` | 128×128 |
-| Cover art | `assets/cover.png` | 1920×960 |
-| High-res icon (spare) | `assets/icon-512.png` | 512×512 |
+| --- | --- | --- |
+| Plugin icon | `assets/icon-128.png` | 128 x 128 |
+| Thumbnail | `assets/cover-1920x1080.png` | 1920 x 1080 |
+| Spare high res icon | `assets/icon-512.png` | 512 x 512 |
+
+Note that Figma asks for a **1920 x 1080** thumbnail. `assets/cover.png` is 1920 x 960,
+which is the older ratio, so use `cover-1920x1080.png`.
 
 Sources are `assets/icon.svg` and `assets/cover.svg`. To re-render after editing:
 
 ```bash
-CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-cd assets
-"$CHROME" --headless --disable-gpu --hide-scrollbars --force-device-scale-factor=1 \
-  --window-size=1920,960 --screenshot=cover.png "file://$PWD/cover.svg"
-"$CHROME" --headless --disable-gpu --hide-scrollbars --force-device-scale-factor=4 \
-  --default-background-color=00000000 --window-size=128,128 \
-  --screenshot=/tmp/icon-raw.png "file://$PWD/icon.svg"
-magick /tmp/icon-raw.png -resize 128x128 icon-128.png
-magick /tmp/icon-raw.png -resize 512x512 icon-512.png
+npm run assets
 ```
 
-ImageMagick alone will not render `cover.svg` — there is no librsvg delegate installed,
-and the internal renderer drops the CSS and text. Chrome is required for that one.
+ImageMagick alone cannot render `cover.svg`, since there is no librsvg delegate
+installed and the internal renderer drops the CSS and text. The script uses Chrome for
+that one.
 
 ---
 
-## Worth doing before you submit
+## Data security disclosure
 
-- **Run it against a real document.** Export `Doc 2 — Databrain and Lightdash` from
-  Marketing-Assets and check the page order, the bookmarks, and the file size.
-- **Test a document with screenshots.** The compression path does nothing on a
-  vector-only document — that is correct behaviour, but it means a vector document
-  proves nothing about compression.
-- **Drop those exports into `test/fixtures/real/`** and run `npm test`. The real-export
-  suite skips when that directory is empty; it is the only check that exercises genuine
-  Figma output rather than synthetic fixtures.
-- **Decide on the network access declaration.** The manifest declares
-  `"allowedDomains": ["none"]`, which is accurate and worth keeping — reviewers and
-  users both read it.
+Quire's answers are straightforward, since it does nothing over the network:
+
+- **Does the plugin access the network?** No. The manifest declares
+  `"allowedDomains": ["none"]`.
+- **Does it collect or transmit user data?** No.
+- **Does it store data?** Yes, locally only. Page order is stored on the section as
+  plugin data inside the user's own file. Panel size and text size are stored in
+  `figma.clientStorage`, which is local to the user's machine.
+- **Third party services?** None.
+- **Analytics or telemetry?** None.
+
+---
+
+## After publishing
+
+The plugin gets a Community URL of the form
+`https://www.figma.com/community/plugin/<id>/quire`. Add it to the README install
+section, replacing the "not yet on the Figma Community" note.

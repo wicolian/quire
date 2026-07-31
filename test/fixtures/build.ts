@@ -17,9 +17,9 @@ import {
  * Synthetic single-page PDFs that stand in for Figma's per-frame export.
  *
  * These are built rather than committed as binaries so the inputs to every test are
- * visible and adjustable. They mimic the structures Figma actually emits — a vector
+ * visible and adjustable. They mimic the structures Figma actually emits, a vector
  * page, a DCTDecode photo, a Flate image with a soft mask, the same logo repeated
- * across pages — which is what the pipeline has to survive.
+ * across pages, which is what the pipeline has to survive.
  *
  * They are not a substitute for testing against a genuine Figma export. See
  * `test/README.md` for how to drop a real one in.
@@ -68,18 +68,18 @@ export function alphaRamp(width: number, height: number): Uint8Array {
   return out
 }
 
-/** A page of text and vector shapes — what a Figma document page mostly is. */
+/** A page of text and vector shapes, what a Figma document page mostly is. */
 export async function vectorPage(title: string, size = A4_150): Promise<Uint8Array> {
   const doc = await PDFDocument.create()
   const page = doc.addPage([size.width, size.height])
   const font = await doc.embedFont(StandardFonts.Helvetica)
 
   page.drawText(title, { x: 100, y: size.height - 160, size: 42, font })
-  page.drawText('A buyer’s comparison', { x: 100, y: size.height - 220, size: 18, font })
+  page.drawText("A buyer's comparison", { x: 100, y: size.height - 220, size: 18, font })
   page.drawRectangle({ x: 100, y: size.height - 260, width: 72, height: 4 })
 
   for (let i = 0; i < 24; i++) {
-    page.drawText(`Row ${i + 1} — supporting body copy for the page.`, {
+    page.drawText(`Row ${i + 1}, supporting body copy for the page.`, {
       x: 100,
       y: size.height - 340 - i * 34,
       size: 13,

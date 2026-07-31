@@ -20,7 +20,7 @@ async function vectorDoc(names: string[]): Promise<{ pages: PageRef[]; bytes: Ma
 
 function baseInput(pages: PageRef[], bytes: Map<string, Uint8Array>): PipelineInput {
   return {
-    docName: 'Doc 2 — Databrain and Lightdash',
+    docName: 'Doc 2 Databrain and Lightdash',
     pages,
     pdfBytes: bytes,
     breaks: [],

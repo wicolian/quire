@@ -55,7 +55,7 @@ describe('recompressImages', () => {
   })
 
   it('leaves an image alone when it is already at the target resolution', async () => {
-    // 600px drawn at 300pt is exactly 144 DPI — under the 150 DPI target.
+    // 600px drawn at 300pt is exactly 144 DPI, under the 150 DPI target.
     const { doc } = await mergePdfs([
       await imagePage({
         imageWidth: 600,

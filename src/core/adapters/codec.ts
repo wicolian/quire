@@ -17,10 +17,10 @@ export interface RawImage {
 
 export interface ImageCodec {
   decodeJpeg(bytes: Uint8Array): Promise<RawImage>
-  /** `quality` is 0–1. Alpha is discarded; JPEG has no alpha channel. */
+  /** `quality` is 0-1. Alpha is discarded; JPEG has no alpha channel. */
   encodeJpeg(image: RawImage, quality: number): Promise<Uint8Array>
   /**
-   * Resample to exact dimensions. Implementations should use a smoothing filter —
+   * Resample to exact dimensions. Implementations should use a smoothing filter -
    * nearest-neighbour downsampling of a screenshot looks visibly broken.
    */
   resize(image: RawImage, width: number, height: number): Promise<RawImage>

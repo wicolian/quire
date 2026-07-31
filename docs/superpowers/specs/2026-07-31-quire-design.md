@@ -1,4 +1,4 @@
-# Quire — Figma section → PDF export with real compression
+# Quire, Figma section → PDF export with real compression
 
 **Date:** 2026-07-31
 **Status:** Approved, in implementation
@@ -13,7 +13,7 @@ multi-frame PDF export. It has two failures:
 2. It does not compress. A document with screenshots comes out at whatever size the
    embedded images happen to be, with no way to hit an email attachment limit.
 
-The reference case is `Marketing-Assets` → section `Doc 2 — Databrain and Lightdash`
+The reference case is `Marketing-Assets` → section `Doc 2, Databrain and Lightdash`
 (node `47:848`): 12 frames named `D2-01 Cover` … `D2-12 Closing`, each 1240×1754
 (A4 @ 150 DPI). Vector and text only, zero raster images. Sibling documents in the
 same file do contain screenshots.
@@ -22,10 +22,10 @@ same file do contain screenshots.
 
 | Decision | Choice |
 |---|---|
-| Compression model | **Smart** — preserve the vector PDF, recompress/downsample only embedded image XObjects. Raster flatten offered as an explicit fallback when a size cap can't otherwise be met. Never rasterizes silently. |
+| Compression model | **Smart**, preserve the vector PDF, recompress/downsample only embedded image XObjects. Raster flatten offered as an explicit fallback when a size cap can't otherwise be met. Never rasterizes silently. |
 | Scope model | **Selection-driven with file scan.** Selected section(s) = documents; their direct frame children = pages. A `Scan whole file` action walks every canvas page and lists all sections for batch export. |
 | Size control | **Presets + custom cap.** Email safe (≤10 MB, 150 DPI), Web (≤5 MB, 120 DPI), Print (no cap, 300 DPI), Custom (exact MB). Advanced drawer exposes raw DPI + JPEG quality. Cap applies per output PDF. |
-| Ordering | **Canvas order by default** (left→right, top→bottom), drag to reorder, A–Z / Z–A / Reverse one click away. Manual order persisted into the section via `pluginData`. New frames append at the end, flagged. |
+| Ordering | **Canvas order by default** (left→right, top→bottom), drag to reorder, A-Z / Z-A / Reverse one click away. Manual order persisted into the section via `pluginData`. New frames append at the end, flagged. |
 | Output | **Combined / Split per page** toggle, plus break markers between any two pages for arbitrary chunking. Two or more files auto-ZIP. |
 | Bookmarks | **In.** PDF outline generated from frame names. |
 | Publishing | **Not published.** Manifest written publish-ready; the user publishes from a different account. |
@@ -62,7 +62,7 @@ in Node tests.
 - **Let Figma do the merge.** `exportAsync` is per-node and a PDF export of one node is
   one page. Native multi-frame PDF export is a UI feature, not exposed to the plugin
   API. *(Validated empirically in step 1 of implementation.)*
-- **`mupdf-wasm` / Ghostscript-wasm.** 10–30 MB payload, slow cold start, CSP friction.
+- **`mupdf-wasm` / Ghostscript-wasm.** 10-30 MB payload, slow cold start, CSP friction.
   Overkill for A4 marketing documents.
 - **Server-side compression.** Confidential marketing documents leave the machine,
   requires hosting, kills offline use.
@@ -106,14 +106,14 @@ level into Form XObjects.
 
 If placement cannot be determined for an image, the fallback is conservative: assume
 the image spans the full page width. That under-estimates its DPI and therefore
-under-compresses. Failing toward "too little compression" is the correct direction —
+under-compresses. Failing toward "too little compression" is the correct direction -
 never toward destroying an image.
 
 ## Modules
 
 | Module | Responsibility | Depends on |
 |---|---|---|
-| `core/types` | Shared data shapes | — |
+| `core/types` | Shared data shapes |, |
 | `core/ordering` | Natural sort, canvas sort, saved-order reconciliation | types |
 | `core/naming` | Filename sanitize, collision suffixing | types |
 | `core/budget` | Preset → params, size search, give-up policy | types |
@@ -122,7 +122,7 @@ never toward destroying an image.
 | `core/images` | Find, decode, downsample, re-encode image XObjects | pdf-lib, placement, codec |
 | `core/bookmarks` | PDF outline from page names | pdf-lib |
 | `core/zip` | Multi-file bundling | fflate |
-| `core/adapters/codec` | `ImageCodec` interface + browser/node implementations | — |
+| `core/adapters/codec` | `ImageCodec` interface + browser/node implementations |, |
 | `main/selection` | Section + frame discovery, file scan | figma |
 | `main/order-store` | `pluginData` read/write | figma |
 | `ui/*` | Panel | preact, core |
@@ -133,13 +133,13 @@ never toward destroying an image.
 PDF to a prospect. They have exported this document many times. The panel's job is to
 confirm a known-good setup fast, not to teach options.
 
-**Domain:** prepress — imposition, signatures, gathering, press check, plate, ink
+**Domain:** prepress, imposition, signatures, gathering, press check, plate, ink
 coverage.
 
 **Color world:** uncoated stock (warm off-white), press black (warm charcoal, never
 `#000`), registration-mark red, blueline-proof blue, graphite, kraft chipboard.
 
-**Signature element — the spine.** A hairline rule binding the page list down its left
+**Signature element, the spine.** A hairline rule binding the page list down its left
 edge. Where a break marker is dropped, the spine physically breaks, making
 combined-vs-split legible at a glance rather than read off a radio button. During
 export, ink fills the spine top-down as each page is pressed: the progress indicator,
@@ -152,13 +152,13 @@ the binding indicator, and the list structure are one mark.
 | Checkbox list + "Select all" | Ordered, spine-bound list. Position number is the affordance; excluding a page is a strikethrough, not an unchecked box. |
 | Blue primary "Export" button | Registration red, stating the outcome: `Export 3 PDFs · ~4.2 MB`. |
 | Labeled `<select>` for quality | Segmented **stock selector**, with an ink gauge filling live against the cap. |
-| Modal spinner | Ink fills the spine page by page — you see which page is on the press. |
+| Modal spinner | Ink fills the spine page by page, you see which page is on the press. |
 
 **Type:** predominantly monospace with tabular figures for all data (page numbers,
 dimensions, DPI, byte counts, filenames); sans only for controls and prose. This UI is
 mostly data, and a proof sheet is typewritten.
 
-**Depth:** borders-only, hairline, low-alpha. No shadows — the panel floats over the
+**Depth:** borders-only, hairline, low-alpha. No shadows, the panel floats over the
 user's canvas and shadows would fight the artwork behind it.
 
 **Theme:** warm paper in Figma's light theme, warm charcoal in dark, switched off
@@ -166,17 +166,17 @@ Figma's own theme signal.
 
 ```
 ┌──────────────────────────────────────────┐
-│  Doc 2 — Databrain and Lightdash    ↻    │
+│  Doc 2, Databrain and Lightdash    ↻    │
 │  12 pages · A4 · 1240×1754               │
 ├──────────────────────────────────────────┤
-│  Canvas ▾    A–Z   Z–A   ⇅               │
+│  Canvas ▾    A-Z   Z-A   ⇅               │
 ├──────────────────────────────────────────┤
 │  │  01   D2-01 Cover                     │
 │  ╵ ──── ✂ ────────────────────────────   │
 │  │  02   D2-02 Introduction              │
 │  │  03   D2-03 Comparison table          │
 │  │  06   D̶2̶-̶0̶6̶ ̶S̶c̶r̶a̶t̶c̶h̶            │
-│  │  07   D2-13 Pricing            ● new  │
+│  │  07   D2-13 Pricing             new  │
 ├──────────────────────────────────────────┤
 │  STOCK   ▪Email   Web   Print   Custom   │
 │  ████████████░░░░░░░░░░   4.2 / 10 MB    │
@@ -194,7 +194,7 @@ Figma's own theme signal.
 | Selection is not a section | Offer: "7 frames selected. Export these as one document?" |
 | Section has no direct frame children | "This section has no frames at its top level." Do not silently export nothing |
 | One frame's `exportAsync` throws | Skip, continue, report at end: "11 of 12 pages exported. `D2-06` failed." Never lose the whole run to one bad node |
-| Still over cap after 3 quality passes | Explicit prompt with the real number: "9.1 MB — still over 8 MB. Flatten to raster?" |
+| Still over cap after 3 quality passes | Explicit prompt with the real number: "9.1 MB, still over 8 MB. Flatten to raster?" |
 | Saved order references deleted nodes | Drop silently; append genuinely-new frames at the end tagged `new` |
 | Document over 50 pages | Chunked merge with a working Cancel |
 | Frames with mismatched dimensions | Inline warning listing the distinct sizes; export proceeds |
@@ -205,21 +205,21 @@ The Figma sandbox is close to untestable, so all risk is pushed into `core/`. Th
 modules run under vitest in Node against real Figma-exported PDF fixtures committed to
 the repo: one vector-only, one screenshot-heavy, one with transparency.
 
-- `ordering` — natural sort (`D2-2` before `D2-10`), persistence round-trip,
+- `ordering`, natural sort (`D2-2` before `D2-10`), persistence round-trip,
   reconciling saved order against added and deleted nodes
-- `merge` — page count, page order preserved, dedupe measurably reduces bytes
-- `placement` — CTM tracking through `q`/`Q`/`cm`, Form XObject recursion, fallback
-- `images` — DCTDecode and FlateDecode paths, `/SMask` transparency survives,
+- `merge`, page count, page order preserved, dedupe measurably reduces bytes
+- `placement`, CTM tracking through `q`/`Q`/`cm`, Form XObject recursion, fallback
+- `images`, DCTDecode and FlateDecode paths, `/SMask` transparency survives,
   already-small images skipped
-- `budget` — preset → params, converges under cap, gives up cleanly after 3 passes
-- `naming` — sanitization, collision suffixes
+- `budget`, preset → params, converges under cap, gives up cleanly after 3 passes
+- `naming`, sanitization, collision suffixes
 
 The `ImageCodec` adapter is what makes this work: pure-JS codec in Node tests,
 `OffscreenCanvas` in the plugin.
 
 ## Stack
 
-TypeScript, esbuild, Preact (3 KB — the drag list needs reconciliation), pdf-lib,
+TypeScript, esbuild, Preact (3 KB, the drag list needs reconciliation), pdf-lib,
 fflate. No network access declared in the manifest.
 
 ## Out of scope

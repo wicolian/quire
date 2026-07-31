@@ -26,7 +26,7 @@ jobs:
         run: npm test
 
       # The plugin is only useful if it actually bundles, and the bundle is what
-      # Figma loads — a passing test suite over an unbuildable tree proves nothing.
+      # Figma loads, a passing test suite over an unbuildable tree proves nothing.
       - name: Build
         run: npm run build
 

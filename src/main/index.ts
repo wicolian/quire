@@ -1,5 +1,5 @@
-import type { UiToMain } from '../shared/messages'
-import { postToUi } from '../shared/messages'
+import type { Prefs, UiToMain } from '../shared/messages'
+import { DEFAULT_PREFS, postToUi } from '../shared/messages'
 import { readArrangements, writeArrangement } from './order-store'
 import { exportPagePdf, exportPageRaster, readSelection, scanFile } from './selection'
 
@@ -12,9 +12,49 @@ import { exportPagePdf, exportPageRaster, readSelection, scanFile } from './sele
  * be tested lives.
  */
 
-const PANEL = { width: 420, height: 640 }
+const PREFS_KEY = 'quire.prefs.v1'
 
-figma.showUI(__html__, { ...PANEL, themeColors: true, title: 'Quire' })
+const LIMITS = { minWidth: 320, maxWidth: 900, minHeight: 380, maxHeight: 1200 }
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, Math.round(value)))
+}
+
+function sanitizePrefs(raw: unknown): Prefs {
+  const prefs = (raw ?? {}) as Partial<Prefs>
+  return {
+    // Anything outside the offered set means a corrupt or hand-edited value.
+    uiScale: [0.9, 1, 1.15].includes(prefs.uiScale as number)
+      ? (prefs.uiScale as number)
+      : DEFAULT_PREFS.uiScale,
+    width: clamp(prefs.width ?? DEFAULT_PREFS.width, LIMITS.minWidth, LIMITS.maxWidth),
+    height: clamp(prefs.height ?? DEFAULT_PREFS.height, LIMITS.minHeight, LIMITS.maxHeight),
+  }
+}
+
+/**
+ * The panel opens at its stored size before anything is rendered, so it never appears
+ * at the default and then jumps.
+ */
+async function boot(): Promise<void> {
+  let prefs = DEFAULT_PREFS
+  try {
+    prefs = sanitizePrefs(await figma.clientStorage.getAsync(PREFS_KEY))
+  } catch {
+    // First run, or storage unavailable. Defaults are correct in both cases.
+  }
+
+  figma.showUI(__html__, {
+    width: prefs.width,
+    height: prefs.height,
+    themeColors: true,
+    title: 'Quire',
+  })
+
+  postToUi({ type: 'prefs', prefs })
+}
+
+void boot()
 
 /** Export runs that have been abandoned; their remaining pages are skipped. */
 const cancelled = new Set<string>()
@@ -85,12 +125,22 @@ figma.ui.onmessage = async (message: UiToMain) => {
       break
 
     case 'resize':
-      // Clamped so a stray drag cannot leave the panel unusably small.
+      // Clamped so a stray drag cannot leave the panel unusably small or absurdly big.
       figma.ui.resize(
-        Math.max(360, Math.round(message.width)),
-        Math.max(400, Math.round(message.height)),
+        clamp(message.width, LIMITS.minWidth, LIMITS.maxWidth),
+        clamp(message.height, LIMITS.minHeight, LIMITS.maxHeight),
       )
       break
+
+    case 'set-prefs': {
+      const prefs = sanitizePrefs(message.prefs)
+      try {
+        await figma.clientStorage.setAsync(PREFS_KEY, prefs)
+      } catch {
+        // Losing a preference is not worth interrupting an export over.
+      }
+      break
+    }
 
     case 'notify':
       figma.notify(message.message, { error: message.error, timeout: message.error ? 6000 : 3000 })

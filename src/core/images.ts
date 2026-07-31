@@ -32,8 +32,8 @@ async function resizeSafe(
  * Recompressing the images embedded in a merged PDF.
  *
  * Everything here is guarded by one rule: an image is only replaced when the result
- * is both valid and genuinely smaller. Every case we cannot handle confidently —
- * exotic filters, indexed palettes, stencil masks — leaves the original untouched.
+ * is both valid and genuinely smaller. Every case we cannot handle confidently -
+ * exotic filters, indexed palettes, stencil masks, leaves the original untouched.
  * A slightly larger PDF is a far better outcome than a corrupted one.
  */
 
@@ -93,7 +93,7 @@ function filterNames(dict: PDFDict): string[] {
 /**
  * Components per pixel for a colour space.
  *
- * Returns null for anything requiring a palette or tint transform to interpret —
+ * Returns null for anything requiring a palette or tint transform to interpret -
  * those are left alone rather than guessed at.
  */
 function colorSpaceComponents(context: PDFContext, value: unknown): number | null {
@@ -185,7 +185,7 @@ function targetSize(
   const width = Math.max(1, Math.round((widthPt / 72) * dpi))
   const height = Math.max(1, Math.round((heightPt / 72) * dpi))
 
-  // Never upscale — that would add bytes and invent detail.
+  // Never upscale, that would add bytes and invent detail.
   return {
     width: Math.min(current.width, width),
     height: Math.min(current.height, height),
@@ -267,7 +267,7 @@ export interface ImagePassOptions {
  * Walk every image XObject in the document, downsample and re-encode where it helps.
  *
  * Mutates `doc` in place and reports what it did. Safe to call on a document with no
- * images at all — which is exactly what a vector-only Figma document looks like.
+ * images at all, which is exactly what a vector-only Figma document looks like.
  */
 export async function recompressImages(
   doc: PDFDocument,

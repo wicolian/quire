@@ -2,7 +2,7 @@
   "name": "quire",
   "version": "0.1.0",
   "private": true,
-  "description": "Quire — export Figma sections as ordered, compressed PDFs",
+  "description": "Export Figma sections as ordered, merged, compressed PDFs",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "preview": "node scripts/preview.mjs"
+    "preview": "node scripts/preview.mjs",
+    "assets": "node scripts/assets.mjs"
   },
   "dependencies": {
     "fflate": "^0.8.2",

@@ -37,6 +37,25 @@
   --row: 34px;
   --unit: 4px;
 
+  /*
+   * Motion identity. One signature curve for most of the interface, three durations,
+   * and one entrance pattern (fade + small rise). No overshoot anywhere, this is a
+   * tool used in ten-second bursts, and bounce would be noise.
+   *
+   * The metaphor does the work: sheets settle onto a stack, ink floods down the spine,
+   * the blade cuts outward. Nothing scales, because paper does not grow.
+   */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-exit: cubic-bezier(0.3, 0, 1, 1);
+
+  --t-quick: 120ms;
+  --t-base: 200ms;
+  --t-slow: 320ms;
+
+  /* How far anything rises on entrance. Small on purpose. */
+  --rise: 4px;
+
   --mono: ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono", "Roboto Mono", Menlo,
     Consolas, monospace;
   --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
@@ -69,9 +88,24 @@
 }
 
 html,
-body,
-#root {
+body {
   height: 100%;
+}
+
+/*
+ * Text size.
+ *
+ * One scale for the whole panel rather than a second set of font sizes, so icons,
+ * spacing, row height and type all move together. Icons are sized in em precisely so
+ * they come along.
+ *
+ * The compensating width and height keep the zoomed content filling the viewport
+ * exactly, instead of overflowing by the scale factor.
+ */
+#root {
+  zoom: var(--ui-scale, 1);
+  width: calc(100% / var(--ui-scale, 1));
+  height: calc(100% / var(--ui-scale, 1));
 }
 
 body {
@@ -109,7 +143,7 @@ button:disabled {
 
 /* Blueline, not registration red. A red ring on a small text button reads as an error
    state; blue reads as focus. Red is reserved for the export action, the ink in the
-   spine, and the over-cap warning — nowhere else. */
+   spine, and the over-cap warning, nowhere else. */
 :focus-visible {
   outline: 2px solid var(--blueline);
   outline-offset: 1px;
@@ -122,6 +156,31 @@ button:disabled {
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
+}
+
+.icon {
+  display: block;
+  flex: none;
+}
+
+/* Figma gives a plugin window no draggable chrome, so the panel supplies its own. */
+.resize-grip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 15px;
+  height: 15px;
+  display: grid;
+  place-items: center;
+  cursor: nwse-resize;
+  color: var(--ink-4);
+  z-index: 5;
+  transition: color var(--t-quick) var(--ease);
+}
+
+.resize-grip:hover {
+  color: var(--ink-2);
 }
 
 .masthead {
@@ -232,6 +291,30 @@ button:disabled {
   background: var(--stock-raised);
 }
 
+/* Sheets settling onto a stack: fade and a small rise, never a scale. Delay is applied
+   inline per row for the cascade; `backwards` so the transform does not linger and
+   fight the drag displacement later. */
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(var(--rise));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.row-shell {
+  animation: settle var(--t-base) var(--ease-enter) backwards;
+  transition: transform var(--t-base) var(--ease);
+}
+
+/* Nothing should slide around while the list is being rebuilt mid-drag. */
+.sheet.dragging .row-shell {
+  animation: none;
+}
+
 .spine {
   position: relative;
   height: 100%;
@@ -241,30 +324,43 @@ button:disabled {
   color: var(--ink-4);
 }
 
-/* The binding itself. */
-.spine::before {
+/* The binding itself, and the ink that floods it during export.
+   Two layers sharing one geometry: ::before is the dry rule, ::after is the ink. */
+.spine::before.spine::after {
   content: "";
   position: absolute;
   left: 11px;
   top: 0;
   bottom: 0;
   width: 1px;
+}
+
+.spine::before {
   background: var(--rule-strong);
 }
 
+/* Ink runs top-down as each page comes off the press. Because rows are marked pressed
+   in sequence, the stagger is the export itself, no artificial delay needed. */
+.spine::after {
+  background: var(--reg);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform var(--t-base) var(--ease-enter);
+}
+
+.row.pressed .spine::after {
+  transform: scaleY(1);
+}
+
 /* The binding runs unbroken through a group and is capped at each end.
-   These must be explicit classes, not :first-child — every row sits in its own
+   These must be explicit classes, not :first-child, every row sits in its own
    wrapper element, so :first-child matches all of them and dashes the spine. */
-.row.first-in-group .spine::before {
+.row.first-in-group .spine::before.row.first-in-group .spine::after {
   top: 7px;
 }
 
-.row.last-in-group .spine::before {
+.row.last-in-group .spine::before.row.last-in-group .spine::after {
   bottom: 7px;
-}
-
-.row.pressed .spine::before {
-  background: var(--reg);
 }
 
 .spine-grip {
@@ -274,14 +370,24 @@ button:disabled {
   position: relative;
   background: var(--stock);
   padding: 2px 0;
+  transition: opacity var(--t-quick) var(--ease);
 }
 
 .row:hover .spine-grip {
   opacity: 1;
 }
 
+/* Lifted off the stack: the sheet you are holding sits proud of the others and shifts
+   slightly toward the reading direction. No shadow, this panel is borders-only. */
 .row.dragging {
-  opacity: 0.5;
+  background: var(--stock-raised);
+  box-shadow: inset 0 0 0 1px var(--rule);
+  border-radius: var(--radius);
+}
+
+.row.dragging .page-name.row.dragging .page-num {
+  transform: translateX(2px);
+  transition: transform var(--t-quick) var(--ease);
 }
 
 .row.excluded .page-name {
@@ -321,8 +427,7 @@ button:disabled {
   opacity: 0;
 }
 
-.row:hover .row-actions,
-.row:focus-within .row-actions {
+.row:hover .row-actions.row:focus-within .row-actions {
   opacity: 1;
 }
 
@@ -350,7 +455,8 @@ button:disabled {
   white-space: nowrap;
 }
 
-/* Where the spine breaks. */
+/* Where the spine breaks. The blade lands first, then the cut travels outward from it -
+   the order a cut actually happens in. */
 .break {
   display: grid;
   grid-template-columns: 22px 1fr auto;
@@ -358,6 +464,18 @@ button:disabled {
   height: 18px;
   color: var(--ink-4);
   padding-right: 8px;
+  animation: break-in var(--t-base) var(--ease-enter);
+}
+
+@keyframes break-in {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: 18px;
+    opacity: 1;
+  }
 }
 
 .break-mark {
@@ -374,6 +492,9 @@ button:disabled {
     var(--rule-strong) 0 3px,
     transparent 3px 6px
   );
+  transform-origin: left;
+  /* Trails the blade by its own duration. */
+  animation: cut var(--t-base) var(--ease-enter) var(--t-quick) backwards;
 }
 
 .break-label {
@@ -385,7 +506,7 @@ button:disabled {
 }
 
 /* Rendered in flow so it lands exactly between two rows regardless of any break
-   markers above it — no offset arithmetic to drift out of sync with the layout. */
+   markers above it, no offset arithmetic to drift out of sync with the layout. */
 .insertion {
   position: relative;
   height: 0;
@@ -393,6 +514,8 @@ button:disabled {
   pointer-events: none;
 }
 
+/* Cuts outward from the spine rather than blinking in, the line grows from the
+   binding, which is where the sheet is about to be bound. */
 .insertion::before {
   content: "";
   position: absolute;
@@ -401,6 +524,17 @@ button:disabled {
   top: -1px;
   height: 1.5px;
   background: var(--reg);
+  transform-origin: left;
+  animation: cut var(--t-quick) var(--ease-enter);
+}
+
+@keyframes cut {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
 /* ── controls ──────────────────────────────────────────────────────────────── */
@@ -433,7 +567,7 @@ button:disabled {
 }
 
 /* One segmented control, used for both output mode and stock, so the two decisions
-   look like the same kind of decision. Always full width — this is the element every
+   look like the same kind of decision. Always full width, this is the element every
    other row in the section aligns its right edge to. */
 .segmented {
   display: grid;
@@ -444,6 +578,21 @@ button:disabled {
   overflow: hidden;
   background: var(--stock-inset);
   min-width: 0;
+  position: relative;
+}
+
+/* The selection slides between segments instead of one background switching off while
+   another switches on. Segments are equal width, so the offset is just the index. */
+.segmented-indicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(100% / var(--count));
+  background: var(--stock-raised);
+  transform: translateX(calc(var(--index) * 100%));
+  transition: transform var(--t-base) var(--ease);
+  pointer-events: none;
 }
 
 .segment {
@@ -452,12 +601,14 @@ button:disabled {
   text-align: center;
   color: var(--ink-2);
   border-right: 1px solid var(--rule);
-  transition: background 100ms ease, color 100ms ease;
+  transition: color var(--t-quick) var(--ease);
   /* Same reason as .controls: let a long label ellipsize rather than widen the panel. */
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  position: relative;
+  z-index: 1;
 }
 
 .segment:last-child {
@@ -469,7 +620,6 @@ button:disabled {
 }
 
 .segment[aria-pressed="true"] {
-  background: var(--stock-raised);
   color: var(--ink);
   font-weight: 600;
 }
@@ -494,7 +644,7 @@ button:disabled {
 .gauge-fill {
   height: 100%;
   background: var(--ink-2);
-  transition: width 220ms cubic-bezier(0.2, 0, 0, 1);
+  transition: width var(--t-slow) var(--ease), background-color var(--t-base) var(--ease);
 }
 
 .gauge-fill.over {
@@ -528,6 +678,39 @@ button:disabled {
   color: var(--ink);
 }
 
+.disclosure-chevron {
+  display: inline-block;
+  transition: transform var(--t-base) var(--ease);
+}
+
+.disclosure[aria-expanded="true"] .disclosure-chevron {
+  transform: rotate(90deg);
+}
+
+/* Opening and closing on grid-template-rows, which is the one way to transition to an
+   intrinsic height without measuring it in JS. The drawer stays mounted so it animates
+   in both directions. */
+.drawer {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--t-base) var(--ease);
+}
+
+.drawer.open {
+  grid-template-rows: 1fr;
+}
+
+.drawer-inner {
+  overflow: hidden;
+}
+
+/* Hidden from focus and assistive tech once closed, held until the collapse finishes so
+   the content does not vanish mid-animation. */
+.drawer:not(.open) .drawer-inner {
+  visibility: hidden;
+  transition: visibility 0s linear var(--t-base);
+}
+
 /* Inset and rule-marked, so the drawer reads as a sub-level rather than more of the
    same section. */
 .advanced {
@@ -535,6 +718,14 @@ button:disabled {
   gap: 11px;
   padding: 11px 0 3px 11px;
   border-left: 1px solid var(--rule);
+  opacity: 0;
+  transform: translateY(calc(var(--rise) * -1));
+  transition: opacity var(--t-base) var(--ease), transform var(--t-base) var(--ease);
+}
+
+.drawer.open .advanced {
+  opacity: 1;
+  transform: none;
 }
 
 /* 1fr for the control and a fixed value column means every row in the section ends at
@@ -629,15 +820,18 @@ button:disabled {
   align-items: center;
   justify-content: center;
   gap: 7px;
-  transition: filter 120ms ease;
+  transition: filter var(--t-quick) var(--ease), transform var(--t-quick) var(--ease);
 }
 
 .export:hover:not(:disabled) {
   filter: brightness(1.07);
 }
 
+/* Presses in rather than dimming, the platen coming down. Small, because this is a
+   professional tool and a 3% squash would read as a toy. */
 .export:active:not(:disabled) {
   filter: brightness(0.94);
+  transform: scale(0.988);
 }
 
 .export.secondary {
@@ -710,6 +904,7 @@ button:disabled {
   display: flex;
   gap: 6px;
   align-items: flex-start;
+  animation: settle var(--t-slow) var(--ease-enter);
 }
 
 .notice.warn {
@@ -791,4 +986,26 @@ button:disabled {
 
 .sheet::-webkit-scrollbar-thumb:hover {
   background: var(--rule-strong);
+}
+
+/*
+ * Motion is decoration on top of a working interface, never load-bearing. Every state
+ * this panel expresses through movement is also expressed through colour, position or
+ * text, so removing motion entirely costs nothing but the polish.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  /* The ink still has to arrive, just without travelling. */
+  .row.pressed .spine::after {
+    transform: scaleY(1);
+  }
 }

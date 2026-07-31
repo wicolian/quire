@@ -16,7 +16,7 @@ import {
  * This is the difference between compressing well and compressing blindly. A 2000px
  * logo placed at 40pt is being displayed at 3600 DPI and is almost pure waste; the
  * same 2000px bitmap spanning a full A4 page is a reasonable 240 DPI and should be
- * left nearly alone. Pixel dimensions alone cannot tell those apart — only the
+ * left nearly alone. Pixel dimensions alone cannot tell those apart, only the
  * transformation matrix in force at the `Do` operator can.
  *
  * So: tokenize the content stream, track the graphics state the way a PDF renderer
@@ -28,7 +28,7 @@ type Matrix = [number, number, number, number, number, number]
 
 const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0]
 
-/** m1 concatenated with m2 — `cm` premultiplies onto the current matrix. */
+/** m1 concatenated with m2, `cm` premultiplies onto the current matrix. */
 function multiply(m1: Matrix, m2: Matrix): Matrix {
   return [
     m1[0] * m2[0] + m1[1] * m2[2],
@@ -68,7 +68,7 @@ function isRegular(byte: number): boolean {
  * Minimal content-stream tokenizer.
  *
  * Only numbers, names and operators matter here, but strings, dictionaries and inline
- * images still have to be *skipped correctly* — binary data inside an inline image
+ * images still have to be *skipped correctly*, binary data inside an inline image
  * would otherwise be read as operators and derail the graphics state.
  */
 function* tokenize(bytes: Uint8Array): Generator<Token> {
@@ -89,7 +89,7 @@ function* tokenize(bytes: Uint8Array): Generator<Token> {
       continue
     }
 
-    // Literal string — track nesting and backslash escapes.
+    // Literal string, track nesting and backslash escapes.
     if (byte === 0x28) {
       i++
       let depth = 1
@@ -310,7 +310,7 @@ function scanStream(
 /**
  * Walk every page and report how large each image XObject is painted.
  *
- * Images that never appear in the returned map could not be located — the caller
+ * Images that never appear in the returned map could not be located, the caller
  * treats those conservatively (see `images.ts`) rather than guessing.
  */
 export function scanPlacements(doc: PDFDocument): PlacementMap {

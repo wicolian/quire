@@ -85,7 +85,7 @@ function signature(obj: PDFObject | undefined, depth = 0): string {
   return obj.toString()
 }
 
-/** FNV-1a over bytes, used only to bucket candidates — equality is byte-exact. */
+/** FNV-1a over bytes, used only to bucket candidates, equality is byte-exact. */
 function hashBytes(bytes: Uint8Array, seed: number): number {
   let hash = seed >>> 0
   for (let i = 0; i < bytes.length; i++) {

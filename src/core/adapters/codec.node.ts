@@ -2,7 +2,7 @@ import jpeg from 'jpeg-js'
 import type { ImageCodec, RawImage } from './codec'
 
 /**
- * Node codec for tests. Pure JS on purpose — a native image dependency would make
+ * Node codec for tests. Pure JS on purpose, a native image dependency would make
  * `npm test` a build problem on someone else's machine, and the test suite is
  * checking the PDF pipeline's logic, not the fidelity of a resampler.
  *

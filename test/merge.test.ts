@@ -61,7 +61,7 @@ describe('dedupeStreams', () => {
     dedupeStreams(doc)
     expect(doc.getPageCount()).toBe(6)
 
-    // Still a loadable document afterwards — the real proof it stayed valid.
+    // Still a loadable document afterwards, the real proof it stayed valid.
     const reloaded = await PDFDocument.load(await doc.save())
     expect(reloaded.getPageCount()).toBe(6)
   })
@@ -73,7 +73,7 @@ describe('dedupeStreams', () => {
     ])
     const { doc } = await mergePdfs(sources)
 
-    // Note dedupe may still collapse other things these two pages share — identical
+    // Note dedupe may still collapse other things these two pages share, identical
     // content streams, for one, which is legal and desirable. What must survive is the
     // two distinct images.
     dedupeStreams(doc)

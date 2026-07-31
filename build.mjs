@@ -17,7 +17,7 @@ const mainConfig = {
 
 /**
  * The UI realm. Figma serves ui.html as a single inlined document, so the JS and CSS
- * have to end up inside it — there is no second request we could make for them.
+ * have to end up inside it, there is no second request we could make for them.
  */
 const uiConfig = {
   entryPoints: ['src/ui/index.tsx'],

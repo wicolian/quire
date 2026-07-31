@@ -1,9 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import { formatBytes, outputFilenames, sanitizeStem, uniqueFilenames } from '../src/core/naming'
 
+// Long dashes are written as escapes rather than as literal characters. They are the
+// thing under test, and a literal one is easy to mangle with a find-and-replace over
+// the repo, which silently turns these into tests of nothing.
+const EM = '\u2014'
+const EN = '\u2013'
+
 describe('sanitizeStem', () => {
   it('keeps the reference document name readable', () => {
-    expect(sanitizeStem('Doc 2 — Databrain and Lightdash')).toBe('Doc-2-Databrain-and-Lightdash')
+    expect(sanitizeStem(`Doc 2 ${EM} Databrain and Lightdash`)).toBe('Doc-2-Databrain-and-Lightdash')
+  })
+
+  it('normalizes every dash variant to a plain hyphen', () => {
+    expect(sanitizeStem(`A ${EM} B`)).toBe('A-B')
+    expect(sanitizeStem(`A ${EN} B`)).toBe('A-B')
+    expect(sanitizeStem('A \u2212 B')).toBe('A-B')
   })
 
   it('strips characters that break filesystems', () => {
@@ -11,7 +23,7 @@ describe('sanitizeStem', () => {
   })
 
   it('collapses runs of whitespace and dashes', () => {
-    expect(sanitizeStem('Too    many —— gaps')).toBe('Too-many-gaps')
+    expect(sanitizeStem(`Too    many ${EM}${EM} gaps`)).toBe('Too-many-gaps')
   })
 
   it('trims leading and trailing punctuation', () => {
@@ -52,9 +64,9 @@ describe('outputFilenames', () => {
   const groups = [[{ name: 'D2-01 Cover' }], [{ name: 'D2-02 Introduction' }, { name: 'D2-03 Table' }]]
 
   it('uses the document name for a single combined file', () => {
-    expect(outputFilenames('Doc 2 — Databrain and Lightdash', [groups.flat()], 'combined')).toEqual([
-      'Doc-2-Databrain-and-Lightdash.pdf',
-    ])
+    expect(
+      outputFilenames(`Doc 2 ${EM} Databrain and Lightdash`, [groups.flat()], 'combined'),
+    ).toEqual(['Doc-2-Databrain-and-Lightdash.pdf'])
   })
 
   it('numbers split groups and names them after their first page', () => {

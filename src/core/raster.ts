@@ -6,7 +6,7 @@ import type { PageRef } from './types'
 /**
  * The raster fallback: flatten pages to images when nothing else will fit the cap.
  *
- * The obvious implementation — rasterize the merged PDF — would mean shipping a full
+ * The obvious implementation, rasterize the merged PDF, would mean shipping a full
  * PDF renderer in the plugin bundle. Instead the frames are re-exported from Figma as
  * JPEGs, which Figma renders far better than any JS renderer would, and those become
  * the pages.

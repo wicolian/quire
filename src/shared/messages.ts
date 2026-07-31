@@ -1,6 +1,20 @@
 import type { Arrangement, DocRef } from '../core/types'
 
 /**
+ * Per-user preferences, stored in figma.clientStorage rather than in the document.
+ * Panel size and text size belong to the person, not to the file, so a teammate
+ * opening the same document gets their own.
+ */
+export interface Prefs {
+  /** Multiplier applied to the whole panel. 0.9, 1 or 1.15. */
+  uiScale: number
+  width: number
+  height: number
+}
+
+export const DEFAULT_PREFS: Prefs = { uiScale: 1, width: 420, height: 640 }
+
+/**
  * The wire protocol between the sandbox and the UI iframe.
  *
  * Everything here has to survive structured cloning, so: plain objects, arrays and
@@ -18,6 +32,7 @@ export type UiToMain =
   | { type: 'export-pages-raster'; requestId: string; pageIds: string[]; scale: number }
   | { type: 'cancel-export'; requestId: string }
   | { type: 'resize'; width: number; height: number }
+  | { type: 'set-prefs'; prefs: Prefs }
   | { type: 'notify'; message: string; error?: boolean }
   | { type: 'select-node'; nodeId: string }
 
@@ -33,6 +48,7 @@ export type MainToUi =
   | { type: 'page-exported'; requestId: string; pageId: string; bytes: Uint8Array }
   | { type: 'page-failed'; requestId: string; pageId: string; reason: string }
   | { type: 'export-done'; requestId: string }
+  | { type: 'prefs'; prefs: Prefs }
 
 export function postToUi(message: MainToUi): void {
   figma.ui.postMessage(message)

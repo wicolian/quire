@@ -32,7 +32,7 @@ export function EmptyState({ reason, sectionName, scanning, scanProgress, onScan
       ) : (
         <>
           <div class="empty-title">
-            “{sectionName}” has no frames at its top level.
+            "{sectionName}" has no frames at its top level.
           </div>
           <div class="empty-hint">
             Quire uses the frames directly inside a section as pages. Frames nested deeper are

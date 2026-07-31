@@ -76,7 +76,7 @@ export function sortPages(pages: PageRef[], mode: SortMode): PageRef[] {
 export interface ReconciledOrder {
   /** Pages in export order, including excluded ones (the UI strikes those through). */
   pages: PageRef[]
-  /** Ids of pages that were not in the saved arrangement — genuinely new frames. */
+  /** Ids of pages that were not in the saved arrangement, genuinely new frames. */
   newPageIds: string[]
   /** The arrangement with dangling ids pruned and new pages appended. */
   arrangement: Arrangement
@@ -86,7 +86,7 @@ export interface ReconciledOrder {
  * Reconcile a saved arrangement against the frames that actually exist right now.
  *
  * Three things can have happened since it was saved: frames deleted (drop them
- * silently — the user deleted them on purpose), frames added (append at the end and
+ * silently, the user deleted them on purpose), frames added (append at the end and
  * flag them, because guessing where a new page belongs is worse than being obvious
  * about not knowing), frames renamed (ids are stable, so nothing to do).
  */
@@ -100,8 +100,7 @@ export function reconcile(pages: PageRef[], saved: Arrangement | null): Reconcil
       pages: sorted,
       newPageIds: [],
       arrangement: {
-        ...EMPTY_ARRANGEMENT,
-        ...saved,
+        ...EMPTY_ARRANGEMENT, ...saved,
         sortMode: mode,
         order: sorted.map((p) => p.id),
         excluded: (saved?.excluded ?? []).filter((id) => byId.has(id)),

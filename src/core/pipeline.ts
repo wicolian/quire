@@ -155,7 +155,7 @@ export async function runPipeline(input: PipelineInput): Promise<ExportReport> {
 
   if (input.pages.length === 0) return report
 
-  // Split mode ignores break markers — every page is its own file already.
+  // Split mode ignores break markers, every page is its own file already.
   const groups =
     input.mode === 'split'
       ? input.pages.map((page) => [page])

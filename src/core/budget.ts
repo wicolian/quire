@@ -63,7 +63,7 @@ export function nextPass(
 /**
  * Rough size estimate shown in the UI before the user commits to an export.
  *
- * This is deliberately crude — the honest number only exists after a real merge. It
+ * This is deliberately crude, the honest number only exists after a real merge. It
  * exists so the gauge is not empty on first open, and it is replaced by the measured
  * size the moment an export finishes.
  */
