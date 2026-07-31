@@ -28,9 +28,13 @@
   --blueline: #4a6fa5;
   --kraft: #a8794a;
 
+  /* The gauge track needs its own token. Reusing --stock-inset made it invisible in
+     dark mode, where the inset surface is darker than the page rather than lighter. */
+  --track: rgba(31, 27, 22, 0.13);
+
   --radius: 3px;
   --radius-lg: 5px;
-  --row: 30px;
+  --row: 34px;
   --unit: 4px;
 
   --mono: ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono", "Roboto Mono", Menlo,
@@ -56,6 +60,8 @@
   --reg-ink: #1a0f0e;
   --blueline: #7d9fd1;
   --kraft: #c39a6b;
+
+  --track: rgba(242, 237, 228, 0.14);
 }
 
 * {
@@ -101,8 +107,11 @@ button:disabled {
   opacity: 0.42;
 }
 
+/* Blueline, not registration red. A red ring on a small text button reads as an error
+   state; blue reads as focus. Red is reserved for the export action, the ink in the
+   spine, and the over-cap warning — nowhere else. */
 :focus-visible {
-  outline: 1.5px solid var(--reg);
+  outline: 2px solid var(--blueline);
   outline-offset: 1px;
   border-radius: var(--radius);
 }
@@ -167,7 +176,7 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 6px 12px;
+  padding: 7px 10px;
   border-bottom: 1px solid var(--rule);
   flex: none;
 }
@@ -211,10 +220,10 @@ button:disabled {
 
 .row {
   display: grid;
-  grid-template-columns: 22px 26px 1fr auto;
+  grid-template-columns: 22px 24px 1fr auto;
   align-items: center;
   height: var(--row);
-  padding-right: 8px;
+  padding-right: 10px;
   position: relative;
   user-select: none;
 }
@@ -243,12 +252,15 @@ button:disabled {
   background: var(--rule-strong);
 }
 
-.row:first-child .spine::before {
-  top: 6px;
+/* The binding runs unbroken through a group and is capped at each end.
+   These must be explicit classes, not :first-child — every row sits in its own
+   wrapper element, so :first-child matches all of them and dashes the spine. */
+.row.first-in-group .spine::before {
+  top: 7px;
 }
 
 .row.last-in-group .spine::before {
-  bottom: 6px;
+  bottom: 7px;
 }
 
 .row.pressed .spine::before {
@@ -283,7 +295,8 @@ button:disabled {
   font-size: 10px;
   color: var(--ink-4);
   text-align: right;
-  padding-right: 8px;
+  padding-right: 10px;
+  letter-spacing: -0.02em;
 }
 
 .row.excluded .page-num {
@@ -395,7 +408,21 @@ button:disabled {
 .controls {
   flex: none;
   border-top: 1px solid var(--rule);
-  padding: 9px 12px 10px;
+  padding: 14px 12px 4px;
+  display: grid;
+  gap: 14px;
+  /* Grid items default to min-width:auto and refuse to shrink below their content.
+     Without this the widest segment label pushes the whole panel into horizontal
+     overflow. */
+  min-width: 0;
+}
+
+/* Each labelled block is its own unit, so the section reads as three decisions
+   rather than one wall of controls. */
+.block {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
 }
 
 .label {
@@ -403,36 +430,45 @@ button:disabled {
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--ink-3);
-  margin-bottom: 5px;
 }
 
-.stocks {
+/* One segmented control, used for both output mode and stock, so the two decisions
+   look like the same kind of decision. Always full width — this is the element every
+   other row in the section aligns its right edge to. */
+.segmented {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   overflow: hidden;
   background: var(--stock-inset);
+  min-width: 0;
 }
 
-.stock {
-  padding: 5px 2px;
+.segment {
+  padding: 6px 4px;
   font-size: 10px;
   text-align: center;
   color: var(--ink-2);
   border-right: 1px solid var(--rule);
+  transition: background 100ms ease, color 100ms ease;
+  /* Same reason as .controls: let a long label ellipsize rather than widen the panel. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.stock:last-child {
+.segment:last-child {
   border-right: none;
 }
 
-.stock:hover {
+.segment:hover {
   color: var(--ink);
 }
 
-.stock[aria-pressed="true"] {
+.segment[aria-pressed="true"] {
   background: var(--stock-raised);
   color: var(--ink);
   font-weight: 600;
@@ -440,18 +476,18 @@ button:disabled {
 
 /* The ink gauge: coverage against the cap, filling like ink on a sheet. */
 .gauge {
-  margin-top: 8px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
+  min-width: 0;
 }
 
 .gauge-track {
-  flex: 1;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--stock-inset);
-  box-shadow: inset 0 0 0 1px var(--rule-soft);
+  flex: 1 1 0;
+  min-width: 0;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--track);
   overflow: hidden;
 }
 
@@ -471,6 +507,7 @@ button:disabled {
   font-size: 10px;
   color: var(--ink-3);
   white-space: nowrap;
+  flex: none;
 }
 
 .gauge-figure.over {
@@ -478,36 +515,44 @@ button:disabled {
 }
 
 .disclosure {
-  margin-top: 8px;
   font-size: 10px;
   color: var(--ink-3);
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
+  justify-self: start;
+  padding: 2px 0;
 }
 
 .disclosure:hover {
   color: var(--ink);
 }
 
+/* Inset and rule-marked, so the drawer reads as a sub-level rather than more of the
+   same section. */
 .advanced {
-  margin-top: 8px;
   display: grid;
-  gap: 7px;
+  gap: 11px;
+  padding: 11px 0 3px 11px;
+  border-left: 1px solid var(--rule);
 }
 
+/* 1fr for the control and a fixed value column means every row in the section ends at
+   the same x. The previous layout let some rows stop short, which is what made the
+   panel look crooked. */
 .field {
   display: grid;
-  grid-template-columns: 74px 1fr 40px;
+  grid-template-columns: 78px 1fr 34px;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   font-size: 10px;
   color: var(--ink-2);
 }
 
 .field input[type="range"] {
   width: 100%;
-  accent-color: var(--reg);
+  /* Neutral, not red. Red is the export action and the ink in the spine, nothing else. */
+  accent-color: var(--ink-2);
   height: 3px;
 }
 
@@ -519,16 +564,27 @@ button:disabled {
   text-align: right;
 }
 
+/* A size cap is one or two digits. A full-width input for it looked stretched and
+   broke the right edge; this sits in a left-aligned group with its unit. */
+.limit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: var(--ink-2);
+}
+
 .text-input {
   background: var(--stock-inset);
   border: 1px solid var(--rule);
   border-radius: var(--radius);
-  padding: 3px 6px;
+  padding: 4px 7px;
   color: var(--ink);
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
   font-size: 10px;
-  width: 100%;
+  width: 68px;
+  text-align: right;
 }
 
 .text-input:focus {
@@ -539,22 +595,17 @@ button:disabled {
 .checkbox {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   font-size: 10px;
   color: var(--ink-2);
   cursor: pointer;
+  line-height: 1.3;
 }
 
 .checkbox input {
-  accent-color: var(--reg);
+  accent-color: var(--ink-2);
   margin: 0;
-}
-
-.toggle-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 9px;
+  flex: none;
 }
 
 /* ── the outcome button ────────────────────────────────────────────────────────
@@ -562,13 +613,12 @@ button:disabled {
 
 .footer {
   flex: none;
-  border-top: 1px solid var(--rule);
-  padding: 9px 12px 11px;
+  padding: 12px;
 }
 
 .export {
   width: 100%;
-  padding: 8px 10px;
+  padding: 10px;
   border-radius: var(--radius-lg);
   background: var(--reg);
   color: var(--reg-ink);

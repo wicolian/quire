@@ -9,7 +9,8 @@
     "watch": "node build.mjs --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "preview": "node scripts/preview.mjs"
   },
   "dependencies": {
     "fflate": "^0.8.2",

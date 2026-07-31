@@ -115,6 +115,32 @@ different answers, and collapsing them leaves the second looking broken.
 Focus rings are `--reg`, 1.5px, offset 1px. Keyboard users are not an afterthought in a
 tool used this repetitively.
 
+## Pitfalls already hit
+
+**Every row in a section must share one right edge.** A 3-column grid whose control
+column stops short of a full-width sibling reads as *crooked* even when nothing is
+misaligned by conventional measure. Full-width elements (segmented controls, the gauge)
+set the edge; everything else aligns to it or is deliberately a left-aligned group.
+
+**Never use `:first-child` for group boundaries.** List rows sit in wrapper elements, so
+`:first-child` matches all of them. It dashed the spine into one segment per row —
+silently destroying the signature element. Compute `first-in-group` / `last-in-group`
+explicitly and pass them as classes.
+
+**Give the gauge track its own token.** It was `--stock-inset`, which is *lighter* than
+the page in light mode but *darker* in dark mode, so the track vanished and the fill
+read as a stray line. Any surface that must stay visible against the page in both
+themes needs a token defined per-theme, not a reused one.
+
+**`min-width: 0` on grid and flex children** that contain nowrap text. The default
+`min-width: auto` refuses to shrink below content, which turns a long label into
+horizontal overflow.
+
+**Verify layout by rendering, not by reading CSS.** `npm run preview` renders the panel
+headlessly in both themes. Note that headless Chrome clamps windows to 500px minimum —
+the script pins the document to the true panel size and crops, because screenshotting a
+420px window silently gives a 500px viewport and makes correct layout look broken.
+
 ## Copy
 
 Plain, specific, no exclamation marks. State real numbers:

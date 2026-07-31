@@ -71,6 +71,11 @@ Then in Figma: **Plugins → Development → Import plugin from manifest…** an
 
 `npm run watch` rebuilds on change. Re-run the plugin in Figma to pick up a rebuild.
 
+`npm run preview` renders the panel headlessly in both themes into `preview/`, with a
+stubbed sandbox. It is a layout check — export, drag and download still need real Figma
+— but it catches overflow, misalignment and contrast that collapses in one theme without
+a round trip.
+
 ## Architecture
 
 Figma plugins are two isolated realms, and the split follows that boundary:

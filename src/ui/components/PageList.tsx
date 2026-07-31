@@ -10,7 +10,8 @@ import type { PageRef } from '../../core/types'
  * progress indicator and the structure the same mark.
  */
 
-const ROW_HEIGHT = 30
+/** Must track `--row` in styles.css; drag target index is computed from it. */
+const ROW_HEIGHT = 34
 
 export interface PageListProps {
   pages: PageRef[]
@@ -82,8 +83,11 @@ export function PageList(props: PageListProps) {
     <div class="sheet" ref={containerRef}>
       {pages.map((page, index) => {
         const isBreak = index > 0 && breaks.has(page.id)
+        // Group boundaries cap the spine. A group starts at the first page or at any
+        // break, and ends at the last page or immediately before the next break.
+        const isFirstInGroup = index === 0 || isBreak
         const isLastInGroup =
-          index === pages.length - 1 || (breaks.has(pages[index + 1]?.id ?? '') && index + 1 < pages.length)
+          index === pages.length - 1 || breaks.has(pages[index + 1]?.id ?? '')
 
         return (
           <div key={page.id}>
@@ -103,6 +107,7 @@ export function PageList(props: PageListProps) {
               class={[
                 'row',
                 excluded.has(page.id) ? 'excluded' : '',
+                isFirstInGroup ? 'first-in-group' : '',
                 isLastInGroup ? 'last-in-group' : '',
                 drag?.index === index ? 'dragging' : '',
                 index < props.pressedCount ? 'pressed' : '',
@@ -124,7 +129,9 @@ export function PageList(props: PageListProps) {
                 </span>
               </div>
 
-              <div class="page-num">{index + 1}</div>
+              {/* Zero-padded so the column holds its width past page 9 and the names
+                  stay on one left edge. */}
+              <div class="page-num">{String(index + 1).padStart(2, '0')}</div>
 
               <div
                 class="page-name"
